@@ -1,5 +1,8 @@
 package com.noticecatch.api.domain.university.controller;
 
+import com.noticecatch.api.domain.university.dto.response.UniversityResponse;
+import com.noticecatch.api.global.apiPayload.response.ListResponse;
+import com.noticecatch.api.global.resolver.CurrentUserId;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -58,7 +61,7 @@ public interface UniversityControllerDocs {
                     )
             )
     })
-    com.noticecatch.api.global.apiPayload.ApiResponse<Map<String, Object>> getUniversities();
+    com.noticecatch.api.global.apiPayload.ApiResponse<ListResponse<UniversityResponse>> getUniversities(@CurrentUserId Long userId);
 
     @Operation(summary = "대학 선택", description = "유저의 소속 대학을 등록 및 변경합니다.")
     @ApiResponses(value = {
@@ -100,6 +103,8 @@ public interface UniversityControllerDocs {
             )
     })
     com.noticecatch.api.global.apiPayload.ApiResponse<Void> selectUniversity(
-            @Parameter(description = "선택할 대학의 고유 ID", example = "1") @PathVariable Long universityId
+            @CurrentUserId Long userId,
+            @Parameter(description = "선택할 대학의 고유 ID", example = "1")
+            @PathVariable Long universityId
     );
 }
