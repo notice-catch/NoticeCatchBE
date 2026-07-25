@@ -64,8 +64,9 @@ public interface UserControllerDocs {
             )
     })
     com.noticecatch.api.global.apiPayload.ApiResponse<Void> setupOnboardingProfile(
+            @CurrentUserId Long userId,
             @Parameter(description = "등록할 학과의 고유 ID", example = "1") @PathVariable Long departmentId,
-            @RequestBody Map<String, Object> request
+            @RequestBody ProfileUpdateRequest request
     );
 
     @Operation(summary = "마이페이지 및 프로필 조회", description = "기본 인적사항 및 개인 지표 데이터를 추출합니다.")

@@ -29,8 +29,9 @@ public class UserController implements UserControllerDocs {
     @Override
     @PatchMapping("/users/department/{departmentId}")
     public ApiResponse<Void> setupOnboardingProfile(
-            @PathVariable Long departmentId,
-            @RequestBody Map<String, Object> request) {
+            @CurrentUserId Long userId, @PathVariable Long departmentId,
+            @RequestBody ProfileUpdateRequest request) {
+        userService.updateOnboardingProfile(userId, departmentId, request);
         return ApiResponse.onSuccess(GeneralSuccessCode.OK, null);
     }
 
