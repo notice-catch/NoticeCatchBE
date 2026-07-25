@@ -2,6 +2,7 @@ package com.noticecatch.api.domain.keyword.service;
 
 import com.noticecatch.api.domain.keyword.dto.request.UserKeywordUpdateRequest;
 import com.noticecatch.api.domain.keyword.dto.response.UserKeywordResponse;
+import com.noticecatch.api.domain.keyword.entity.RecommendKeyword;
 import com.noticecatch.api.domain.keyword.entity.UserKeyword;
 import com.noticecatch.api.domain.keyword.exception.KeywordErrorCode;
 import com.noticecatch.api.domain.keyword.repository.UserKeywordRepository;
@@ -28,6 +29,19 @@ public class UserKeywordService {
 
     private final UserRepository userRepository;
     private final UserKeywordRepository userKeywordRepository;
+
+    @Transactional(readOnly = true)
+    public ListResponse<UserKeywordResponse> getRecommendKeywords(Long userId) {
+        // 유저 존재 여부 검증 및 엔티티 조회
+        if (userId == null || !userRepository.existsById(userId)) {
+            throw new ProjectException(UserErrorCode.USER_NOT_FOUND);
+        }
+
+        // 추천 키워드 목록 조회
+        List<UserKeywordResponse> recommendList = RecommendKeyword.getRecommendList();
+
+        return ListResponse.from(recommendList);
+    }
 
     public ListResponse<UserKeywordResponse> getUserKeywords(Long userId) {
         User user = getUser(userId);

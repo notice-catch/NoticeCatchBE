@@ -1,6 +1,7 @@
 package com.noticecatch.api.domain.user.service;
 
 import com.noticecatch.api.domain.department.entity.Department;
+import com.noticecatch.api.domain.department.exception.DepartmentErrorCode;
 import com.noticecatch.api.domain.department.repository.DepartmentRepository;
 import com.noticecatch.api.domain.keyword.repository.UserKeywordRepository;
 import com.noticecatch.api.domain.notice.repository.UserNoticeRepository;
@@ -12,6 +13,7 @@ import com.noticecatch.api.domain.user.dto.response.ProfileResponse;
 import com.noticecatch.api.domain.user.entity.User;
 import com.noticecatch.api.domain.user.exception.UserErrorCode;
 import com.noticecatch.api.domain.user.repository.UserRepository;
+import com.noticecatch.api.global.apiPayload.code.GeneralErrorCode;
 import com.noticecatch.api.global.apiPayload.exception.ProjectException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -28,6 +30,21 @@ public class UserService {
     private final DepartmentRepository departmentRepository;
     private final UserNoticeRepository userNoticeRepository;
     private final UserKeywordRepository userKeywordRepository;
+
+    @Transactional
+    public void updateOnboardingProfile(Long userId, Long departmentId, ProfileUpdateRequest request) {
+        // 유저 존재 여부 검증
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ProjectException(GeneralErrorCode.UNAUTHORIZED));
+
+        // 학과 존재 여부 검증
+        Department department = departmentRepository.findById(departmentId)
+                .orElseThrow(() -> new ProjectException(DepartmentErrorCode.DEPARTMENT_NOT_FOUND));
+
+        // 학과 변경 및 학년 업데이트
+        user.changeDepartment(department);
+        user.updateProfile(user.getNickname(), request.grade());
+    }
 
     public MyPageProfileResponse getMyPage(Long userId) {
         User user = getActiveUser(userId);
