@@ -1,17 +1,25 @@
 package com.noticecatch.api.domain.university.controller;
 
+import com.noticecatch.api.domain.university.dto.response.UniversityResponse;
+import com.noticecatch.api.domain.university.service.UniversityService;
 import com.noticecatch.api.global.apiPayload.ApiResponse;
 import com.noticecatch.api.global.apiPayload.code.GeneralSuccessCode;
+import com.noticecatch.api.global.apiPayload.response.ListResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import java.util.Map;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/v1")
 public class UniversityController implements UniversityControllerDocs {
+
+    private final UniversityService universityService;
+
     @Override
     @GetMapping("/universities")
-    public ApiResponse<Map<String, Object>> getUniversities() {
-        return ApiResponse.onSuccess(GeneralSuccessCode.OK, null);
+    public ApiResponse<ListResponse<UniversityResponse>> getUniversities() {
+        return ApiResponse.onSuccess(GeneralSuccessCode.OK,
+                universityService.getUniversities());
     }
 
     @Override
