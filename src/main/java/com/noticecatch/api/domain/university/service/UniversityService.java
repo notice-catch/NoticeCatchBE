@@ -22,7 +22,13 @@ public class UniversityService {
     private final UniversityRepository universityRepository;
     private final UserRepository userRepository;
 
-    public ListResponse<UniversityResponse> getUniversities() {
+    public ListResponse<UniversityResponse> getUniversities(Long userId) {
+        // 로그인된 유저 존재 여부 검증
+        boolean userExists = userRepository.existsById(userId);
+        if (!userExists) {
+            throw new ProjectException(GeneralErrorCode.UNAUTHORIZED);
+        }
+
         List<UniversityResponse> universityDtos = universityRepository.findAll().stream()
                 .map(UniversityResponse::from)
                 .toList();

@@ -61,7 +61,7 @@ public interface UniversityControllerDocs {
                     )
             )
     })
-    com.noticecatch.api.global.apiPayload.ApiResponse<ListResponse<UniversityResponse>> getUniversities();
+    com.noticecatch.api.global.apiPayload.ApiResponse<ListResponse<UniversityResponse>> getUniversities(@CurrentUserId Long userId);
 
     @Operation(summary = "대학 선택", description = "유저의 소속 대학을 등록 및 변경합니다.")
     @ApiResponses(value = {

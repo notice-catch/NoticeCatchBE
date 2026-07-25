@@ -18,9 +18,10 @@ public class UniversityController implements UniversityControllerDocs {
 
     @Override
     @GetMapping("/universities")
-    public ApiResponse<ListResponse<UniversityResponse>> getUniversities() {
+    public ApiResponse<ListResponse<UniversityResponse>> getUniversities(
+            @CurrentUserId Long userId) {
         return ApiResponse.onSuccess(GeneralSuccessCode.OK,
-                universityService.getUniversities());
+                universityService.getUniversities(userId));
     }
 
     @Override
