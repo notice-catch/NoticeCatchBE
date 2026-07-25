@@ -30,6 +30,7 @@ public class UserKeywordService {
     private final UserRepository userRepository;
     private final UserKeywordRepository userKeywordRepository;
 
+    @Transactional(readOnly = true)
     public ListResponse<UserKeywordResponse> getRecommendKeywords(Long userId) {
         // 유저 존재 여부 검증 및 엔티티 조회
         if (userId == null || !userRepository.existsById(userId)) {

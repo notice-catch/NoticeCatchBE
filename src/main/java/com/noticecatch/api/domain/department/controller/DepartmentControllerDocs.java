@@ -1,5 +1,8 @@
 package com.noticecatch.api.domain.department.controller;
 
+import com.noticecatch.api.domain.department.dto.response.DepartmentResponse;
+import com.noticecatch.api.global.apiPayload.response.ListResponse;
+import com.noticecatch.api.global.resolver.CurrentUserId;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -64,8 +67,11 @@ public interface DepartmentControllerDocs {
                     )
             )
     })
-    com.noticecatch.api.global.apiPayload.ApiResponse<Map<String, Object>> getDepartments(
-            @Parameter(description = "조회 대상 대학의 고유 ID", example = "1") @PathVariable Long universityId,
-            @Parameter(description = "학과 검색어", example = "컴퓨터") @RequestParam(name = "keyword", required = false) String keyword
+    com.noticecatch.api.global.apiPayload.ApiResponse<ListResponse<DepartmentResponse>> getDepartments(
+            @CurrentUserId Long userId,
+            @Parameter(description = "조회 대상 대학의 고유 ID", example = "1")
+            @PathVariable Long universityId,
+            @Parameter(description = "학과 검색어", example = "컴퓨터")
+            @RequestParam(name = "keyword", required = false) String keyword
     );
 }
