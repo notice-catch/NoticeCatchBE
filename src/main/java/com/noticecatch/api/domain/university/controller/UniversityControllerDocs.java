@@ -2,6 +2,7 @@ package com.noticecatch.api.domain.university.controller;
 
 import com.noticecatch.api.domain.university.dto.response.UniversityResponse;
 import com.noticecatch.api.global.apiPayload.response.ListResponse;
+import com.noticecatch.api.global.resolver.CurrentUserId;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -102,6 +103,8 @@ public interface UniversityControllerDocs {
             )
     })
     com.noticecatch.api.global.apiPayload.ApiResponse<Void> selectUniversity(
-            @Parameter(description = "선택할 대학의 고유 ID", example = "1") @PathVariable Long universityId
+            @CurrentUserId Long userId,
+            @Parameter(description = "선택할 대학의 고유 ID", example = "1")
+            @PathVariable Long universityId
     );
 }
