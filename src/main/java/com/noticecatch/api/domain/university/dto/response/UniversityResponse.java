@@ -6,15 +6,14 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Getter
+import com.noticecatch.api.domain.university.entity.University;
+import lombok.Builder;
+
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class UniversityResponse {
-
-    private Long universityId;
-    private String universityName;
-
+public record UniversityResponse(
+        Long universityId,
+        String universityName
+) {
     public static UniversityResponse from(University university) {
         return UniversityResponse.builder()
                 .universityId(university.getId())
