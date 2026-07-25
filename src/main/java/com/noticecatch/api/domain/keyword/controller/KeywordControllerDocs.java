@@ -1,5 +1,8 @@
 package com.noticecatch.api.domain.keyword.controller;
 
+import com.noticecatch.api.domain.keyword.dto.response.UserKeywordResponse;
+import com.noticecatch.api.global.apiPayload.response.ListResponse;
+import com.noticecatch.api.global.resolver.CurrentUserId;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -59,5 +62,6 @@ public interface KeywordControllerDocs {
                     )
             )
     })
-    com.noticecatch.api.global.apiPayload.ApiResponse<Map<String, Object>> getRecommendKeywords();
+    com.noticecatch.api.global.apiPayload.ApiResponse<ListResponse<UserKeywordResponse>> getRecommendKeywords(
+            @CurrentUserId Long userId);
 }
