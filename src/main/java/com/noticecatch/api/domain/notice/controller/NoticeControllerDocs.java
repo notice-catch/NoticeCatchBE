@@ -2,6 +2,7 @@ package com.noticecatch.api.domain.notice.controller;
 
 import com.noticecatch.api.domain.notice.dto.response.*;
 import com.noticecatch.api.global.apiPayload.ApiResponse;
+import com.noticecatch.api.global.apiPayload.response.SliceResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
@@ -9,7 +10,6 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.data.domain.Slice;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -111,7 +111,7 @@ public interface NoticeControllerDocs {
                     )
             )
     })
-    ApiResponse<Slice<NoticeSearchItemResponse>> getNotices(
+    ApiResponse<SliceResponse<NoticeSearchItemResponse>> getNotices(
             @RequestParam int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String keyword
@@ -607,7 +607,7 @@ public interface NoticeControllerDocs {
                     )
             )
     })
-    ApiResponse<Slice<NoticeSearchItemResponse>> getCalendarNotices(
+    ApiResponse<SliceResponse<NoticeSearchItemResponse>> getCalendarNotices(
             @Parameter(hidden = true) Long userId,
             @Parameter(description = "조회 날짜 (yyyy-MM-dd) 기입", example = "2026-07-04") @RequestParam String date,
             @RequestParam int page,
@@ -690,7 +690,7 @@ public interface NoticeControllerDocs {
                     )
             )
     })
-    ApiResponse<Slice<NoticeSearchItemResponse>> getNoDeadlineNotices(
+    ApiResponse<SliceResponse<NoticeSearchItemResponse>> getNoDeadlineNotices(
             @Parameter(hidden = true) Long userId,
             @Parameter(description = "페이지 번호 (0부터 시작)", example = "0") @RequestParam int page,
             @Parameter(description = "한 페이지에 보여줄 개수", example = "20") @RequestParam(defaultValue = "20") int size

@@ -3,6 +3,7 @@ package com.noticecatch.api.domain.notice.controller;
 import com.noticecatch.api.domain.notice.dto.response.*;
 import com.noticecatch.api.domain.notice.service.NoticeService;
 import com.noticecatch.api.domain.notice.service.UserNoticeService;
+import com.noticecatch.api.global.apiPayload.response.SliceResponse;
 import com.noticecatch.api.global.apiPayload.ApiResponse;
 import com.noticecatch.api.global.apiPayload.code.GeneralSuccessCode;
 import lombok.RequiredArgsConstructor;
@@ -20,12 +21,12 @@ public class NoticeController implements NoticeControllerDocs {
 
     @Override
     @GetMapping
-    public ApiResponse<Slice<NoticeSearchItemResponse>> getNotices(
+    public ApiResponse<SliceResponse<NoticeSearchItemResponse>> getNotices(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String keyword) {
         Slice<NoticeSearchItemResponse> response = noticeService.getNotices(page, size, keyword);
-        return ApiResponse.onSuccess(GeneralSuccessCode.OK, response);
+        return ApiResponse.onSuccess(GeneralSuccessCode.OK, SliceResponse.from(response));
     }
 
     @Override
@@ -81,22 +82,22 @@ public class NoticeController implements NoticeControllerDocs {
 
     @Override
     @GetMapping("/calendar")
-    public ApiResponse<Slice<NoticeSearchItemResponse>> getCalendarNotices(
+    public ApiResponse<SliceResponse<NoticeSearchItemResponse>> getCalendarNotices(
             @AuthenticationPrincipal Long userId,
             @RequestParam String date,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         Slice<NoticeSearchItemResponse> response = userNoticeService.getCalendarNotices(userId, date, page, size);
-        return ApiResponse.onSuccess(GeneralSuccessCode.OK, response);
+        return ApiResponse.onSuccess(GeneralSuccessCode.OK, SliceResponse.from(response));
     }
 
     @Override
     @GetMapping("/calendar/no-deadline")
-    public ApiResponse<Slice<NoticeSearchItemResponse>> getNoDeadlineNotices(
+    public ApiResponse<SliceResponse<NoticeSearchItemResponse>> getNoDeadlineNotices(
             @AuthenticationPrincipal Long userId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         Slice<NoticeSearchItemResponse> response = userNoticeService.getNoDeadlineNotices(userId, page, size);
-        return ApiResponse.onSuccess(GeneralSuccessCode.OK, response);
+        return ApiResponse.onSuccess(GeneralSuccessCode.OK, SliceResponse.from(response));
     }
 }
