@@ -69,7 +69,7 @@ public class NoticeService {
         if (keyword != null && !keyword.isBlank()) {
             noticeSlice = noticeRepository.findByCategory_Name(keyword.trim(), pageable);
         } else {
-            noticeSlice = noticeRepository.findAll(pageable);
+            noticeSlice = noticeRepository.findAllBy(pageable);
         }
 
         return noticeSlice.map(NoticeSearchItemResponse::from);
