@@ -2,8 +2,8 @@ package com.noticecatch.api.domain.support.controller;
 
 import com.noticecatch.api.domain.support.dto.response.FaqResponse;
 import com.noticecatch.api.domain.support.dto.response.SupportNoticeResponse;
-import com.noticecatch.api.global.apiPayload.response.PageResponse;
 import com.noticecatch.api.global.apiPayload.response.ListResponse;
+import com.noticecatch.api.global.apiPayload.response.SliceResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -73,7 +73,7 @@ public interface SupportControllerDocs {
                     )
             )
     })
-    com.noticecatch.api.global.apiPayload.ApiResponse<PageResponse<SupportNoticeResponse>> getSupportNotices(
+    com.noticecatch.api.global.apiPayload.ApiResponse<SliceResponse<SupportNoticeResponse>> getSupportNotices(
             @RequestParam int page, @RequestParam int size);
 
     @Operation(summary = "FAQ 목록 조회", description = "선택 태그 범주에 속한 자주 묻는 질문들을 리스트업합니다.")

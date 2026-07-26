@@ -6,7 +6,7 @@ import org.springframework.data.domain.Page;
 import java.util.Map;
 
 @Getter
-public class ScrapPageResponse<T> extends PageResponse<T> {
+public class ScrapPageResponse<T> extends SliceResponse<T> {
 
     private final Map<String, Integer> categoryCounts; // 카테고리별 카운트 통계 추가
 

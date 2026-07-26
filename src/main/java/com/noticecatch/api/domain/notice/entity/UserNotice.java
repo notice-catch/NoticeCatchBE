@@ -41,12 +41,19 @@ public class UserNotice {
         if (this.isRead == null) this.isRead = false;
     }
 
-    // 스크랩 상태 토글
+    public static UserNotice create(User user, Notice notice) {
+        return UserNotice.builder()
+                .user(user)
+                .notice(notice)
+                .isScrapped(false)
+                .isRead(false)
+                .build();
+    }
+
     public void toggleScrap() {
         this.isScrapped = !this.isScrapped;
     }
 
-    // 읽음 처리 상태 변경
     public void markAsRead() {
         this.isRead = true;
     }

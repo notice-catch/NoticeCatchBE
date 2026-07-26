@@ -1,9 +1,8 @@
 package com.noticecatch.api.domain.support.service;
 
 import com.noticecatch.api.domain.support.dto.response.SupportNoticeResponse;
-import com.noticecatch.api.domain.support.entity.SupportNotice;
 import com.noticecatch.api.domain.support.repository.SupportNoticeRepository;
-import com.noticecatch.api.global.apiPayload.response.PageResponse;
+import com.noticecatch.api.global.apiPayload.response.SliceResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,9 +16,9 @@ public class SupportNoticeService {
 
     private final SupportNoticeRepository supportNoticeRepository;
 
-    public PageResponse<SupportNoticeResponse> getSupportNotices(Pageable pageable) {
+    public SliceResponse<SupportNoticeResponse> getSupportNotices(Pageable pageable) {
         Page<SupportNoticeResponse> page = supportNoticeRepository.findAllByOrderByCreatedAtDesc(pageable)
                 .map(SupportNoticeResponse::from);
-        return PageResponse.from(page);
+        return SliceResponse.from(page);
     }
 }

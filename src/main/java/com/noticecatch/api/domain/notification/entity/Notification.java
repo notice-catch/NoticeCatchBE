@@ -4,6 +4,7 @@ import com.noticecatch.api.domain.notice.entity.Notice;
 import com.noticecatch.api.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -26,6 +27,10 @@ public class Notification {
     @JoinColumn(name = "notice_id", nullable = false)
     private Notice notice;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "notification_type", nullable = false)
+    private NotificationType notificationType;
+
     @Column(nullable = false, length = 255)
     private String title;
 
@@ -44,7 +49,6 @@ public class Notification {
         if (this.isRead == null) this.isRead = false;
     }
 
-    // 푸시 알림 확인 처리
     public void readNotification() {
         this.isRead = true;
     }
