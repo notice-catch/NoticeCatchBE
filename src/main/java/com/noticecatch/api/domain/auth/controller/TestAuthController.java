@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
 @Profile({"local", "dev"}) // 👈 테스트 컨트롤러이므로 로컬/dev 프로필 설정 명시
-public class TestAuthController {
+public class TestAuthController implements TestAuthControllerDocs {
 
     private final JwtProvider jwtProvider; // @Autowired 대신 생성자 주입 추천
 
