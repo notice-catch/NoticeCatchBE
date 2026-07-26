@@ -12,6 +12,8 @@ import java.util.List;
 
 public interface NoticeRepository extends JpaRepository<Notice, Long> {
 
+    Slice<Notice> findAllBy(Pageable pageable);
+
     Slice<Notice> findByCategory_Name(String categoryName, Pageable pageable);
 
     @Query("SELECT n FROM Notice n " +
