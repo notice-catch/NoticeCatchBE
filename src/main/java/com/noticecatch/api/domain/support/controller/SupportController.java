@@ -7,7 +7,7 @@ import com.noticecatch.api.domain.support.service.SupportNoticeService;
 import com.noticecatch.api.global.apiPayload.ApiResponse;
 import com.noticecatch.api.global.apiPayload.code.GeneralSuccessCode;
 import com.noticecatch.api.global.apiPayload.response.ListResponse;
-import com.noticecatch.api.global.apiPayload.response.PageResponse;
+import com.noticecatch.api.global.apiPayload.response.SliceResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.web.bind.annotation.*;
@@ -22,7 +22,7 @@ public class SupportController implements SupportControllerDocs {
 
     @Override
     @GetMapping("/notices")
-    public ApiResponse<PageResponse<SupportNoticeResponse>> getSupportNotices(
+    public ApiResponse<SliceResponse<SupportNoticeResponse>> getSupportNotices(
             @RequestParam int page,
             @RequestParam(defaultValue = "20") int size) {
         return ApiResponse.onSuccess(GeneralSuccessCode.OK,
