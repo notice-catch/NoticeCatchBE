@@ -1,6 +1,6 @@
 package com.noticecatch.api.domain.notice.controller;
 
-import com.noticecatch.api.domain.notice.dto.response.NoticeDetailResponse;
+import com.noticecatch.api.domain.notice.dto.response.*;
 import com.noticecatch.api.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -9,11 +9,12 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.data.domain.Slice;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
-import java.util.Map;
 
 @Tag(name = "📢 Notice", description = "학사 공지사항 조회, 검색, 스크랩, 캘린더 API")
+@SuppressWarnings("unused")
 public interface NoticeControllerDocs {
 
     @Operation(summary = "홈 공지 피드", description = "통합 공지 피드 및 카테고리 필터링 조회를 지원합니다. page=0이면 최신 동기화.")
@@ -72,9 +73,49 @@ public interface NoticeControllerDocs {
                     """
                             )
                     )
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "401",
+                    description = "인증 실패",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(
+                                    name = "실패 예시 (AUTH401)",
+                                    value = """
+                    {
+                      "isSuccess": false,
+                      "code": "AUTH401",
+                      "message": "인증 자격 증명이 유효하지 않거나 만료되었습니다. 다시 로그인해 주세요.",
+                      "result": null
+                    }
+                    """
+                            )
+                    )
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "500",
+                    description = "서버 에러",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(
+                                    name = "실패 예시 (SERVER500)",
+                                    value = """
+                    {
+                      "isSuccess": false,
+                      "code": "SERVER500",
+                      "message": "서버 내부 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.",
+                      "result": null
+                    }
+                    """
+                            )
+                    )
             )
     })
-    ApiResponse<Map<String, Object>> getNotices(@RequestParam int page, @RequestParam int size, @RequestParam String keyword);
+    ApiResponse<Slice<NoticeSearchItemResponse>> getNotices(
+            @RequestParam int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String keyword
+    );
 
     @Operation(summary = "공지 상세 보기", description = "AI 요약 내용이 결합된 공지사항 세부 내용을 가져옵니다.")
     @ApiResponses(value = {
@@ -112,6 +153,24 @@ public interface NoticeControllerDocs {
                     )
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "401",
+                    description = "인증 실패",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(
+                                    name = "실패 예시 (AUTH401)",
+                                    value = """
+                    {
+                      "isSuccess": false,
+                      "code": "AUTH401",
+                      "message": "인증 자격 증명이 유효하지 않거나 만료되었습니다. 다시 로그인해 주세요.",
+                      "result": null
+                    }
+                    """
+                            )
+                    )
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "404",
                     description = "조회 실패",
                     content = @Content(
@@ -128,10 +187,29 @@ public interface NoticeControllerDocs {
                     """
                             )
                     )
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "500",
+                    description = "서버 에러",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(
+                                    name = "실패 예시 (SERVER500)",
+                                    value = """
+                    {
+                      "isSuccess": false,
+                      "code": "SERVER500",
+                      "message": "서버 내부 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.",
+                      "result": null
+                    }
+                    """
+                            )
+                    )
             )
     })
     ApiResponse<NoticeDetailResponse> getNoticeDetail(
-            @Parameter(description = "공지사항 고유 ID", example = "42") @PathVariable Long noticeId
+            @Parameter(hidden = true) Long userId,
+            @Parameter(description = "공지사항 고유 ID", example = "42") @PathVariable("noticeId") Long noticeId
     );
 
     @Operation(summary = "키워드 검색", description = "검색어 및 정렬 기준에 맞춰 공지사항 목록을 무한 스크롤 페이징합니다.")
@@ -169,6 +247,24 @@ public interface NoticeControllerDocs {
                     )
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "401",
+                    description = "인증 실패",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(
+                                    name = "실패 예시 (AUTH401)",
+                                    value = """
+                    {
+                      "isSuccess": false,
+                      "code": "AUTH401",
+                      "message": "인증 자격 증명이 유효하지 않거나 만료되었습니다. 다시 로그인해 주세요.",
+                      "result": null
+                    }
+                    """
+                            )
+                    )
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "500",
                     description = "서버 에러",
                     content = @Content(
@@ -187,11 +283,11 @@ public interface NoticeControllerDocs {
                     )
             )
     })
-    ApiResponse<Map<String, Object>> searchNotices(
-            @RequestParam String searchWord,
-            @RequestParam String sort,
-            @RequestParam int page,
-            @RequestParam int size
+    ApiResponse<NoticeSearchListResponse> searchNotices(
+            @Parameter(description = "검색 키워드 (최소 2자)", example = "장학") @RequestParam String searchWord,
+            @Parameter(description = "정렬 기준 (latest: 최신순, deadline: 마감일순)", example = "latest") @RequestParam(defaultValue = "latest") String sort,
+            @Parameter(description = "페이지 번호 (0부터 시작)", example = "0") @RequestParam int page,
+            @Parameter(description = "한 페이지당 출력 개수", example = "20") @RequestParam(defaultValue = "20") int size
     );
 
     @Operation(summary = "공지 스크랩 설정/해제", description = "공지사항 단건을 스크랩하거나 취소합니다.")
@@ -218,6 +314,24 @@ public interface NoticeControllerDocs {
                     )
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "401",
+                    description = "인증 실패",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(
+                                    name = "실패 예시 (AUTH401)",
+                                    value = """
+                    {
+                      "isSuccess": false,
+                      "code": "AUTH401",
+                      "message": "인증 자격 증명이 유효하지 않거나 만료되었습니다. 다시 로그인해 주세요.",
+                      "result": null
+                    }
+                    """
+                            )
+                    )
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "404",
                     description = "설정 실패",
                     content = @Content(
@@ -234,10 +348,29 @@ public interface NoticeControllerDocs {
                     """
                             )
                     )
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "500",
+                    description = "서버 에러",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(
+                                    name = "실패 예시 (SERVER500)",
+                                    value = """
+                    {
+                      "isSuccess": false,
+                      "code": "SERVER500",
+                      "message": "서버 내부 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.",
+                      "result": null
+                    }
+                    """
+                            )
+                    )
             )
     })
-    ApiResponse<Map<String, Object>> scrapNotice(
-            @Parameter(description = "스크랩할 공지사항 고유 ID", example = "42") @PathVariable Long noticeId
+    ApiResponse<NoticeScrapResponse> scrapNotice(
+            @Parameter(hidden = true) Long userId,
+            @Parameter(description = "스크랩할 공지사항 고유 ID", example = "42") @PathVariable("noticeId") Long noticeId
     );
 
     @Operation(summary = "스크랩 목록 보기", description = "카테고리별 누적 카운팅 정보를 포함하여 스크랩 리스트를 페이징 반환합니다.")
@@ -289,6 +422,24 @@ public interface NoticeControllerDocs {
                     )
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "401",
+                    description = "인증 실패",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(
+                                    name = "실패 예시 (AUTH401)",
+                                    value = """
+                    {
+                      "isSuccess": false,
+                      "code": "AUTH401",
+                      "message": "인증 자격 증명이 유효하지 않거나 만료되었습니다. 다시 로그인해 주세요.",
+                      "result": null
+                    }
+                    """
+                            )
+                    )
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "500",
                     description = "서버 에러",
                     content = @Content(
@@ -307,11 +458,12 @@ public interface NoticeControllerDocs {
                     )
             )
     })
-    ApiResponse<Map<String, Object>> getScrapNotices(
-            @RequestParam String categoryTag,
-            @RequestParam String sort,
+    ApiResponse<NoticeScrapListResponse> getScrapNotices(
+            @Parameter(hidden = true) Long userId,
+            @RequestParam(required = false) String categoryTag,
+            @RequestParam(defaultValue = "latest") String sort,
             @RequestParam int page,
-            @RequestParam int size
+            @RequestParam(defaultValue = "20") int size
     );
 
     @Operation(summary = "캘린더 스크랩 마감 공지 날짜 조회", description = "특정 년/월에 마감 일정이 존재하는 날짜 리스트를 뽑아옵니다.")
@@ -358,9 +510,28 @@ public interface NoticeControllerDocs {
                     """
                             )
                     )
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "500",
+                    description = "서버 에러",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(
+                                    name = "실패 예시 (SERVER500)",
+                                    value = """
+                    {
+                      "isSuccess": false,
+                      "code": "SERVER500",
+                      "message": "서버 내부 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.",
+                      "result": null
+                    }
+                    """
+                            )
+                    )
             )
     })
-    ApiResponse<Map<String, Object>> getCalendarDates(
+    ApiResponse<CalendarDatesResponse> getCalendarDates(
+            @Parameter(hidden = true) Long userId,
             @RequestParam String year,
             @RequestParam String month
     );
@@ -400,6 +571,24 @@ public interface NoticeControllerDocs {
                     )
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "401",
+                    description = "인증 실패",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(
+                                    name = "실패 예시 (AUTH401)",
+                                    value = """
+                    {
+                      "isSuccess": false,
+                      "code": "AUTH401",
+                      "message": "인증 자격 증명이 유효하지 않거나 만료되었습니다. 다시 로그인해 주세요.",
+                      "result": null
+                    }
+                    """
+                            )
+                    )
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "500",
                     description = "서버 에러",
                     content = @Content(
@@ -418,10 +607,11 @@ public interface NoticeControllerDocs {
                     )
             )
     })
-    ApiResponse<Map<String, Object>> getCalendarNotices(
+    ApiResponse<Slice<NoticeSearchItemResponse>> getCalendarNotices(
+            @Parameter(hidden = true) Long userId,
             @Parameter(description = "조회 날짜 (yyyy-MM-dd) 기입", example = "2026-07-04") @RequestParam String date,
             @RequestParam int page,
-            @RequestParam int size
+            @RequestParam(defaultValue = "20") int size
     );
 
     @Operation(
@@ -464,6 +654,24 @@ public interface NoticeControllerDocs {
                     )
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "401",
+                    description = "인증 실패",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(
+                                    name = "실패 예시 (AUTH401)",
+                                    value = """
+                    {
+                      "isSuccess": false,
+                      "code": "AUTH401",
+                      "message": "인증 자격 증명이 유효하지 않거나 만료되었습니다. 다시 로그인해 주세요.",
+                      "result": null
+                    }
+                    """
+                            )
+                    )
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "500",
                     description = "서버 에러",
                     content = @Content(
@@ -482,8 +690,9 @@ public interface NoticeControllerDocs {
                     )
             )
     })
-    ApiResponse<Map<String, Object>> getNoDeadlineNotices(
+    ApiResponse<Slice<NoticeSearchItemResponse>> getNoDeadlineNotices(
+            @Parameter(hidden = true) Long userId,
             @Parameter(description = "페이지 번호 (0부터 시작)", example = "0") @RequestParam int page,
-            @Parameter(description = "한 페이지에 보여줄 개수", example = "20") @RequestParam int size
+            @Parameter(description = "한 페이지에 보여줄 개수", example = "20") @RequestParam(defaultValue = "20") int size
     );
 }

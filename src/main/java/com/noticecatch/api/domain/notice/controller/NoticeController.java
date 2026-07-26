@@ -1,12 +1,14 @@
 package com.noticecatch.api.domain.notice.controller;
 
-import com.noticecatch.api.domain.notice.dto.response.NoticeDetailResponse;
+import com.noticecatch.api.domain.notice.dto.response.*;
 import com.noticecatch.api.domain.notice.service.NoticeService;
+import com.noticecatch.api.domain.notice.service.UserNoticeService;
 import com.noticecatch.api.global.apiPayload.ApiResponse;
 import com.noticecatch.api.global.apiPayload.code.GeneralSuccessCode;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Slice;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/notices")
@@ -14,72 +16,87 @@ import java.util.Map;
 public class NoticeController implements NoticeControllerDocs {
 
     private final NoticeService noticeService;
+    private final UserNoticeService userNoticeService;
 
     @Override
     @GetMapping
-    public ApiResponse<Map<String, Object>> getNotices(
-            @RequestParam int page,
+    public ApiResponse<Slice<NoticeSearchItemResponse>> getNotices(
+            @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String keyword) {
-        return ApiResponse.onSuccess(GeneralSuccessCode.OK, null);
+        Slice<NoticeSearchItemResponse> response = noticeService.getNotices(page, size, keyword);
+        return ApiResponse.onSuccess(GeneralSuccessCode.OK, response);
     }
 
     @Override
     @GetMapping("/{noticeId}")
-    public ApiResponse<NoticeDetailResponse> getNoticeDetail(@PathVariable Long noticeId) {
-        NoticeDetailResponse response = noticeService.getNoticeDetail(noticeId);
+    public ApiResponse<NoticeDetailResponse> getNoticeDetail(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable("noticeId") Long noticeId) {
+        NoticeDetailResponse response = noticeService.getNoticeDetail(userId, noticeId);
         return ApiResponse.onSuccess(GeneralSuccessCode.OK, response);
     }
 
     @Override
     @GetMapping("/search")
-    public ApiResponse<Map<String, Object>> searchNotices(
+    public ApiResponse<NoticeSearchListResponse> searchNotices(
             @RequestParam String searchWord,
-            @RequestParam String sort,
-            @RequestParam int page,
+            @RequestParam(defaultValue = "latest") String sort,
+            @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.onSuccess(GeneralSuccessCode.OK, null);
+        NoticeSearchListResponse response = noticeService.searchNotices(searchWord, sort, page, size);
+        return ApiResponse.onSuccess(GeneralSuccessCode.OK, response);
     }
 
     @Override
     @PostMapping("/{noticeId}/scrap")
-    public ApiResponse<Map<String, Object>> scrapNotice(@PathVariable Long noticeId) {
-        return ApiResponse.onSuccess(GeneralSuccessCode.OK, null);
+    public ApiResponse<NoticeScrapResponse> scrapNotice(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable("noticeId") Long noticeId) {
+        NoticeScrapResponse response = userNoticeService.scrapNotice(userId, noticeId);
+        return ApiResponse.onSuccess(GeneralSuccessCode.OK, response);
     }
 
     @Override
     @GetMapping("/scraps")
-    public ApiResponse<Map<String, Object>> getScrapNotices(
-            @RequestParam String categoryTag,
-            @RequestParam String sort,
-            @RequestParam int page,
+    public ApiResponse<NoticeScrapListResponse> getScrapNotices(
+            @AuthenticationPrincipal Long userId,
+            @RequestParam(required = false) String categoryTag,
+            @RequestParam(defaultValue = "latest") String sort,
+            @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.onSuccess(GeneralSuccessCode.OK, null);
+        NoticeScrapListResponse response = userNoticeService.getScrapNotices(userId, categoryTag, sort, page, size);
+        return ApiResponse.onSuccess(GeneralSuccessCode.OK, response);
     }
 
     @Override
     @GetMapping("/calendar/dates")
-    public ApiResponse<Map<String, Object>> getCalendarDates(
+    public ApiResponse<CalendarDatesResponse> getCalendarDates(
+            @AuthenticationPrincipal Long userId,
             @RequestParam String year,
             @RequestParam String month) {
-        return ApiResponse.onSuccess(GeneralSuccessCode.OK, null);
+        CalendarDatesResponse response = userNoticeService.getCalendarDates(userId, year, month);
+        return ApiResponse.onSuccess(GeneralSuccessCode.OK, response);
     }
 
     @Override
     @GetMapping("/calendar")
-    public ApiResponse<Map<String, Object>> getCalendarNotices(
+    public ApiResponse<Slice<NoticeSearchItemResponse>> getCalendarNotices(
+            @AuthenticationPrincipal Long userId,
             @RequestParam String date,
-            @RequestParam int page,
+            @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.onSuccess(GeneralSuccessCode.OK, null);
+        Slice<NoticeSearchItemResponse> response = userNoticeService.getCalendarNotices(userId, date, page, size);
+        return ApiResponse.onSuccess(GeneralSuccessCode.OK, response);
     }
 
     @Override
     @GetMapping("/calendar/no-deadline")
-    public ApiResponse<Map<String, Object>> getNoDeadlineNotices(
-            @RequestParam int page,
-            @RequestParam(defaultValue = "20") int size
-    ) {
-        return ApiResponse.onSuccess(GeneralSuccessCode.OK, null);
+    public ApiResponse<Slice<NoticeSearchItemResponse>> getNoDeadlineNotices(
+            @AuthenticationPrincipal Long userId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        Slice<NoticeSearchItemResponse> response = userNoticeService.getNoDeadlineNotices(userId, page, size);
+        return ApiResponse.onSuccess(GeneralSuccessCode.OK, response);
     }
 }
