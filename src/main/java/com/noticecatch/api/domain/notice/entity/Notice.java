@@ -33,7 +33,7 @@ public class Notice {
     private String title;
 
     @Lob
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "MEDIUMTEXT")
     private String content;
 
     @Column(name = "origin_url", length = 255)

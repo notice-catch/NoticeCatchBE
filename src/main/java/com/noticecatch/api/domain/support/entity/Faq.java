@@ -23,10 +23,10 @@ public class Faq {
     @Column(nullable = false, length = 50)
     private String category; // ACCOUNT, NOTICE, ALARM, ETC
 
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @Column(nullable = false, columnDefinition = "MEDIUMTEXT")
     private String question;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @Column(nullable = false, columnDefinition = "MEDIUMTEXT")
     private String answer;
 
     @CreatedDate
