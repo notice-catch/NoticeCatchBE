@@ -61,6 +61,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/api/v1/auth/login",   // 로그인 관련 API
+                                "/api/v1/auth/test-login", // test 로그인 관련 API
                                 "/v3/api-docs/**",      // Swagger API docs
                                 "/swagger-ui/**",       // Swagger UI Resource
                                 "/swagger-ui.html"      // Swagger HTML
