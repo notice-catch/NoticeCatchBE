@@ -113,6 +113,7 @@ public interface NoticeControllerDocs {
             )
     })
     ApiResponse<SliceResponse<NoticeSearchItemResponse>> getNotices(
+            @CurrentUserId Long userId,
             @RequestParam int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String keyword

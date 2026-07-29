@@ -22,10 +22,11 @@ public class NoticeController implements NoticeControllerDocs {
     @Override
     @GetMapping
     public ApiResponse<SliceResponse<NoticeSearchItemResponse>> getNotices(
+            @CurrentUserId Long userId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String keyword) {
-        Slice<NoticeSearchItemResponse> response = noticeService.getNotices(page, size, keyword);
+        Slice<NoticeSearchItemResponse> response = noticeService.getNotices(userId, page, size, keyword);
         return ApiResponse.onSuccess(GeneralSuccessCode.OK, SliceResponse.from(response));
     }
 

@@ -27,6 +27,19 @@ public class NoticeService {
     private final NoticeRepository noticeRepository;
     private final UserNoticeRepository userNoticeRepository;
 
+    public Slice<NoticeSearchItemResponse> getNotices(Long userId, int page, int size, String keyword) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "postedAt"));
+
+        Slice<Notice> noticeSlice;
+        if (keyword != null && !keyword.isBlank()) {
+            noticeSlice = noticeRepository.findByCategory_Name(keyword.trim(), pageable);
+        } else {
+            noticeSlice = noticeRepository.findAllBy(pageable);
+        }
+
+        return noticeSlice.map(NoticeSearchItemResponse::from);
+    }
+
     public NoticeDetailResponse getNoticeDetail(Long userId, Long noticeId) {
         Notice notice = noticeRepository.findById(noticeId)
                 .orElseThrow(() -> new ProjectException(NoticeErrorCode.NOTICE_NOT_FOUND));
@@ -60,19 +73,6 @@ public class NoticeService {
         Slice<NoticeSearchItemResponse> responseSlice = noticeSlice.map(NoticeSearchItemResponse::from);
 
         return NoticeSearchListResponse.of(responseSlice);
-    }
-
-    public Slice<NoticeSearchItemResponse> getNotices(int page, int size, String keyword) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "postedAt"));
-
-        Slice<Notice> noticeSlice;
-        if (keyword != null && !keyword.isBlank()) {
-            noticeSlice = noticeRepository.findByCategory_Name(keyword.trim(), pageable);
-        } else {
-            noticeSlice = noticeRepository.findAllBy(pageable);
-        }
-
-        return noticeSlice.map(NoticeSearchItemResponse::from);
     }
 
     public List<String> getCalendarDates(String year, String month) {
