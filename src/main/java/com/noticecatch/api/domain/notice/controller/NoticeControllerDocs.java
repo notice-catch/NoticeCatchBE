@@ -3,6 +3,7 @@ package com.noticecatch.api.domain.notice.controller;
 import com.noticecatch.api.domain.notice.dto.response.*;
 import com.noticecatch.api.global.apiPayload.ApiResponse;
 import com.noticecatch.api.global.apiPayload.response.SliceResponse;
+import com.noticecatch.api.global.resolver.CurrentUserId;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
@@ -112,6 +113,7 @@ public interface NoticeControllerDocs {
             )
     })
     ApiResponse<SliceResponse<NoticeSearchItemResponse>> getNotices(
+            @CurrentUserId Long userId,
             @RequestParam int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String keyword
@@ -208,8 +210,8 @@ public interface NoticeControllerDocs {
             )
     })
     ApiResponse<NoticeDetailResponse> getNoticeDetail(
-            @Parameter(hidden = true) Long userId,
-            @Parameter(description = "공지사항 고유 ID", example = "42") @PathVariable("noticeId") Long noticeId
+            @CurrentUserId Long userId,
+            @PathVariable @Parameter(description = "공지사항 고유 ID", example = "42") Long noticeId
     );
 
     @Operation(summary = "키워드 검색", description = "검색어 및 정렬 기준에 맞춰 공지사항 목록을 무한 스크롤 페이징합니다.")
@@ -369,8 +371,8 @@ public interface NoticeControllerDocs {
             )
     })
     ApiResponse<NoticeScrapResponse> scrapNotice(
-            @Parameter(hidden = true) Long userId,
-            @Parameter(description = "스크랩할 공지사항 고유 ID", example = "42") @PathVariable("noticeId") Long noticeId
+            @CurrentUserId Long userId,
+            @PathVariable @Parameter(description = "스크랩할 공지사항 고유 ID", example = "42") Long noticeId
     );
 
     @Operation(summary = "스크랩 목록 보기", description = "카테고리별 누적 카운팅 정보를 포함하여 스크랩 리스트를 페이징 반환합니다.")
@@ -459,7 +461,7 @@ public interface NoticeControllerDocs {
             )
     })
     ApiResponse<NoticeScrapListResponse> getScrapNotices(
-            @Parameter(hidden = true) Long userId,
+            @CurrentUserId Long userId,
             @RequestParam(required = false) String categoryTag,
             @RequestParam(defaultValue = "latest") String sort,
             @RequestParam int page,
@@ -531,7 +533,7 @@ public interface NoticeControllerDocs {
             )
     })
     ApiResponse<CalendarDatesResponse> getCalendarDates(
-            @Parameter(hidden = true) Long userId,
+            @CurrentUserId Long userId,
             @RequestParam String year,
             @RequestParam String month
     );
@@ -608,7 +610,7 @@ public interface NoticeControllerDocs {
             )
     })
     ApiResponse<SliceResponse<NoticeSearchItemResponse>> getCalendarNotices(
-            @Parameter(hidden = true) Long userId,
+            @CurrentUserId Long userId,
             @Parameter(description = "조회 날짜 (yyyy-MM-dd) 기입", example = "2026-07-04") @RequestParam String date,
             @RequestParam int page,
             @RequestParam(defaultValue = "20") int size
@@ -691,7 +693,7 @@ public interface NoticeControllerDocs {
             )
     })
     ApiResponse<SliceResponse<NoticeSearchItemResponse>> getNoDeadlineNotices(
-            @Parameter(hidden = true) Long userId,
+            @CurrentUserId Long userId,
             @Parameter(description = "페이지 번호 (0부터 시작)", example = "0") @RequestParam int page,
             @Parameter(description = "한 페이지에 보여줄 개수", example = "20") @RequestParam(defaultValue = "20") int size
     );
