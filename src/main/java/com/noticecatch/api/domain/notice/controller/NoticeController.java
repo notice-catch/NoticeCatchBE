@@ -6,9 +6,9 @@ import com.noticecatch.api.domain.notice.service.UserNoticeService;
 import com.noticecatch.api.global.apiPayload.response.SliceResponse;
 import com.noticecatch.api.global.apiPayload.ApiResponse;
 import com.noticecatch.api.global.apiPayload.code.GeneralSuccessCode;
+import com.noticecatch.api.global.resolver.CurrentUserId;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Slice;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -32,8 +32,8 @@ public class NoticeController implements NoticeControllerDocs {
     @Override
     @GetMapping("/{noticeId}")
     public ApiResponse<NoticeDetailResponse> getNoticeDetail(
-            @AuthenticationPrincipal Long userId,
-            @PathVariable("noticeId") Long noticeId) {
+            @CurrentUserId Long userId,
+            @PathVariable Long noticeId) {
         NoticeDetailResponse response = noticeService.getNoticeDetail(userId, noticeId);
         return ApiResponse.onSuccess(GeneralSuccessCode.OK, response);
     }
@@ -52,8 +52,8 @@ public class NoticeController implements NoticeControllerDocs {
     @Override
     @PostMapping("/{noticeId}/scrap")
     public ApiResponse<NoticeScrapResponse> scrapNotice(
-            @AuthenticationPrincipal Long userId,
-            @PathVariable("noticeId") Long noticeId) {
+            @CurrentUserId Long userId,
+            @PathVariable Long noticeId) {
         NoticeScrapResponse response = userNoticeService.scrapNotice(userId, noticeId);
         return ApiResponse.onSuccess(GeneralSuccessCode.OK, response);
     }
@@ -61,7 +61,7 @@ public class NoticeController implements NoticeControllerDocs {
     @Override
     @GetMapping("/scraps")
     public ApiResponse<NoticeScrapListResponse> getScrapNotices(
-            @AuthenticationPrincipal Long userId,
+            @CurrentUserId Long userId,
             @RequestParam(required = false) String categoryTag,
             @RequestParam(defaultValue = "latest") String sort,
             @RequestParam(defaultValue = "0") int page,
@@ -73,7 +73,7 @@ public class NoticeController implements NoticeControllerDocs {
     @Override
     @GetMapping("/calendar/dates")
     public ApiResponse<CalendarDatesResponse> getCalendarDates(
-            @AuthenticationPrincipal Long userId,
+            @CurrentUserId Long userId,
             @RequestParam String year,
             @RequestParam String month) {
         CalendarDatesResponse response = userNoticeService.getCalendarDates(userId, year, month);
@@ -83,7 +83,7 @@ public class NoticeController implements NoticeControllerDocs {
     @Override
     @GetMapping("/calendar")
     public ApiResponse<SliceResponse<NoticeSearchItemResponse>> getCalendarNotices(
-            @AuthenticationPrincipal Long userId,
+            @CurrentUserId Long userId,
             @RequestParam String date,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -94,7 +94,7 @@ public class NoticeController implements NoticeControllerDocs {
     @Override
     @GetMapping("/calendar/no-deadline")
     public ApiResponse<SliceResponse<NoticeSearchItemResponse>> getNoDeadlineNotices(
-            @AuthenticationPrincipal Long userId,
+            @CurrentUserId Long userId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         Slice<NoticeSearchItemResponse> response = userNoticeService.getNoDeadlineNotices(userId, page, size);

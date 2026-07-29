@@ -30,11 +30,13 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew bootJar -x test
 
-      # 전송 편의성을 위해 빌드된 jar 파일명을 app.jar로 변경
+      # 5. JAR 파일명을 app.jar로 단일화하여 안전하게 복사
       - name: Rename JAR file
-        run: mv build/libs/*[!plain].jar build/libs/app.jar
+        run: |
+          mkdir -p build/deploy
+          cp build/libs/*[!plain].jar build/deploy/app.jar
 
-      # 5. Docker 관련 파일 전송 (infra 폴더 안의 파일들 전송)
+      # 6. Docker 관련 파일 전송
       - name: Transfer Docker files to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -45,18 +47,18 @@ jobs:
           target: "/home/ubuntu/infra"
           strip_components: 1
 
-      # 6. 빌드 및 이름 변경된 app.jar만 EC2 target 경로로 직접 전송
+      # 7. app.jar 파일만 EC2 target 경로(/home/ubuntu/infra/app.jar)로 전송
       - name: Transfer jar to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_KEY }}
-          source: "build/libs/app.jar"
+          source: "build/deploy/app.jar"
           target: "/home/ubuntu/infra"
-          strip_components: 2 # build/libs 경로를 떼어내고 infra/app.jar로 바로 배치
+          strip_components: 2
 
-      # 7. EC2 서버 접속 후 도커 컴포즈 재실행 (SSH)
+      # 8. EC2 서버 접속 후 기존 컨테이너 완전 정지 및 재생성 (SSH)
       - name: Deploy to EC2 via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -65,5 +67,12 @@ jobs:
           key: ${{ secrets.EC2_KEY }}
           script: |
             cd /home/ubuntu/infra
+            
+            # 기존 구동 중인 컨테이너 제거
+            sudo docker compose -f docker-compose-prod.yml down --remove-orphans || true
+            
+            # 새 이미지 빌드 및 백그라운드 재실행
             sudo docker compose -f docker-compose-prod.yml up -d --build
+            
+            # 미사용 이미지 정리
             sudo docker image prune -f
