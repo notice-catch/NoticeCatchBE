@@ -12,9 +12,8 @@ import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
 /**
- * TODO(회원/인증 연동): 아직 JWT 인증 필터가 없어 임시로 "X-USER-ID" 요청 헤더로 로그인 유저를 지정한다.
- * 회원팀이 JWT 필터를 완성하면 이 클래스만 SecurityContext에서 유저 ID를 꺼내오도록 교체하면 되고,
- * {@code @CurrentUserId} 를 사용하는 컨트롤러 쪽 코드는 손댈 필요가 없다.
+ * {@code JwtAuthenticationFilter}가 SecurityContext에 채워둔 인증 정보(principal = userId)를 꺼내
+ * {@code @CurrentUserId}가 붙은 컨트롤러 파라미터에 주입한다.
  */
 @Component
 public class CurrentUserIdArgumentResolver implements HandlerMethodArgumentResolver {
