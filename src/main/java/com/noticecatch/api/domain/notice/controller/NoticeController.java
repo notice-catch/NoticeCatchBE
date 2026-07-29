@@ -26,8 +26,8 @@ public class NoticeController implements NoticeControllerDocs {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String keyword) {
-        Slice<NoticeSearchItemResponse> response = noticeService.getNotices(userId, page, size, keyword);
-        return ApiResponse.onSuccess(GeneralSuccessCode.OK, SliceResponse.from(response));
+        return ApiResponse.onSuccess(GeneralSuccessCode.OK,
+                noticeService.getNotices(userId, page, size, keyword));
     }
 
     @Override

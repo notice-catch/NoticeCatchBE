@@ -16,6 +16,12 @@ public interface NoticeRepository extends JpaRepository<Notice, Long> {
 
     Slice<Notice> findByCategory_Name(String categoryName, Pageable pageable);
 
+    // 대학교의 카테고리 공지 목록 조회
+    Slice<Notice> findByUniversity_IdAndCategory_Name(Long universityId, String categoryName, Pageable pageable);
+
+    // 대학교의 공지 목록 조회
+    Slice<Notice> findByUniversity_Id(Long universityId, Pageable pageable);
+
     @Query("SELECT n FROM Notice n " +
             "WHERE n.title LIKE %:keyword% OR n.content LIKE %:keyword%")
     Slice<Notice> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);

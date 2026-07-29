@@ -8,7 +8,12 @@ import com.noticecatch.api.domain.notice.entity.UserNotice;
 import com.noticecatch.api.domain.notice.exception.NoticeErrorCode;
 import com.noticecatch.api.domain.notice.repository.NoticeRepository;
 import com.noticecatch.api.domain.notice.repository.UserNoticeRepository;
+import com.noticecatch.api.domain.university.exception.UniversityErrorCode;
+import com.noticecatch.api.domain.user.entity.User;
+import com.noticecatch.api.domain.user.exception.UserErrorCode;
+import com.noticecatch.api.domain.user.repository.UserRepository;
 import com.noticecatch.api.global.apiPayload.exception.ProjectException;
+import com.noticecatch.api.global.apiPayload.response.SliceResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -26,18 +31,33 @@ public class NoticeService {
 
     private final NoticeRepository noticeRepository;
     private final UserNoticeRepository userNoticeRepository;
+    private final UserRepository userRepository;
 
-    public Slice<NoticeSearchItemResponse> getNotices(Long userId, int page, int size, String keyword) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "postedAt"));
+    public SliceResponse<NoticeSearchItemResponse> getNotices(Long userId, int page, int size, String keyword) {
+        // 사용자 조회 및 대학교 검증
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ProjectException(UserErrorCode.USER_NOT_FOUND));
 
-        Slice<Notice> noticeSlice;
-        if (keyword != null && !keyword.isBlank()) {
-            noticeSlice = noticeRepository.findByCategory_Name(keyword.trim(), pageable);
-        } else {
-            noticeSlice = noticeRepository.findAllBy(pageable);
+        if (user.getDepartment() == null || user.getDepartment().getUniversity() == null) {
+            throw new ProjectException(UniversityErrorCode.UNIVERSITY_NOT_FOUND);
         }
 
-        return noticeSlice.map(NoticeSearchItemResponse::from);
+        Long universityId = user.getDepartment().getUniversity().getId();
+
+        // 최신순 정렬 페이징 생성
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "postedAt"));
+
+        // 사용자 대학교 관련 공지만 조회
+        Slice<Notice> noticeSlice;
+        if (keyword != null && !keyword.isBlank()) {
+            noticeSlice = noticeRepository.findByUniversity_IdAndCategory_Name(universityId, keyword.trim(), pageable);
+        } else {
+            noticeSlice = noticeRepository.findByUniversity_Id(universityId, pageable);
+        }
+
+        Slice<NoticeSearchItemResponse> responseSlice = noticeSlice.map(NoticeSearchItemResponse::from);
+
+        return SliceResponse.from(responseSlice);
     }
 
     public NoticeDetailResponse getNoticeDetail(Long userId, Long noticeId) {
