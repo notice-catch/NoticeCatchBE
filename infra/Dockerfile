@@ -1,4 +1,4 @@
-# 1단계: 빌드 스테이지
+# 1단계: 런타임 스테이지 (경량화된 Temurin JRE Alpine)
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /application
 
@@ -11,9 +11,10 @@ RUN apk add --no-cache tzdata && \
 RUN addgroup --system spring && adduser --system spring -G spring
 USER spring:spring
 
-# 같은 경로의 app.jar를 복사하도록 변경
+# 빌드되어 전송된 app.jar 파일 복사
 COPY app.jar app.jar
 
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75.0", "-jar", "app.jar"]
+# JAVA_OPTS가 있으면 적용하고, 없으면 기본 동적 메모리 옵션을 사용
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -XX:MaxRAMPercentage=75.0 -jar app.jar"]

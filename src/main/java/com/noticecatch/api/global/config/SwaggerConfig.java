@@ -1,15 +1,23 @@
 package com.noticecatch.api.global.config;
 
+import com.noticecatch.api.global.resolver.CurrentUserId;
+import com.noticecatch.api.global.security.UserAuthentication;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
+import org.springdoc.core.utils.SpringDocUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class SwaggerConfig {
+
+    static {
+        // @CurrentUserId 어노테이션이 붙은 파라미터를 Swagger 문서에서 숨김
+        SpringDocUtils.getConfig().addAnnotationsToIgnore(CurrentUserId.class);
+    }
 
     @Bean
     public OpenAPI openAPI() {
