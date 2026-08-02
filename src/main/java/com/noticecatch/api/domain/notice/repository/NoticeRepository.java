@@ -23,8 +23,11 @@ public interface NoticeRepository extends JpaRepository<Notice, Long> {
     Slice<Notice> findByUniversity_Id(Long universityId, Pageable pageable);
 
     @Query("SELECT n FROM Notice n " +
-            "WHERE n.title LIKE %:keyword% OR n.content LIKE %:keyword%")
-    Slice<Notice> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
+            "WHERE n.university.id = :universityId " +
+            "AND (n.title LIKE %:keyword% OR n.content LIKE %:keyword%)")
+    Slice<Notice> searchByKeywordAndUniversityId(@Param("universityId") Long universityId,
+                                                 @Param("keyword") String keyword,
+                                                 Pageable pageable);
 
     @Query("SELECT DISTINCT FUNCTION('DATE_FORMAT', n.deadlineAt, '%Y-%m-%d') " +
             "FROM Notice n " +

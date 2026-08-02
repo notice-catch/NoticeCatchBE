@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-  # 운영 스프링 부트 API 서버 컨테이너만 실행합니다.
   catch-api:
     build:
       context: .
@@ -17,10 +16,19 @@ services:
     depends_on:
       - catch-redis
     restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 450M # API 컨테이너가 450MB 이상 먹지 못하도록 물리적 제한
 
   catch-redis:
     image: redis:alpine
     container_name: catch-redis-prod
-    ports:
-      - "6379:6379"
+    expose:
+      - "6379"
     restart: always
+    command: redis-server --maxmemory 100mb --maxmemory-policy allkeys-lru # Redis 메모리 최대 100MB 제한
+    deploy:
+      resources:
+        limits:
+          memory: 150M
