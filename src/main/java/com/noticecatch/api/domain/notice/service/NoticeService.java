@@ -74,7 +74,16 @@ public class NoticeService {
         return NoticeDetailResponse.of(notice, isScrapped);
     }
 
-    public NoticeSearchListResponse searchNotices(String searchWord, String sort, int page, int size) {
+    public NoticeSearchListResponse searchNotices(Long userId, String searchWord, String sort, int page, int size) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ProjectException(UserErrorCode.USER_NOT_FOUND));
+
+        if (user.getDepartment() == null || user.getDepartment().getUniversity() == null) {
+            throw new ProjectException(UniversityErrorCode.UNIVERSITY_NOT_FOUND);
+        }
+
+        Long universityId = user.getDepartment().getUniversity().getId();
+
         if (searchWord == null || searchWord.trim().length() < 2) {
             throw new ProjectException(NoticeErrorCode.SEARCH_KEYWORD_TOO_SHORT);
         }
@@ -88,7 +97,7 @@ public class NoticeService {
 
         Pageable pageable = PageRequest.of(page, size, sortOrder);
 
-        Slice<Notice> noticeSlice = noticeRepository.searchByKeyword(trimmedKeyword, pageable);
+        Slice<Notice> noticeSlice = noticeRepository.searchByKeywordAndUniversityId(universityId, trimmedKeyword, pageable);
 
         Slice<NoticeSearchItemResponse> responseSlice = noticeSlice.map(NoticeSearchItemResponse::from);
 

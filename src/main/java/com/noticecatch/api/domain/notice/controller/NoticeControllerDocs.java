@@ -286,6 +286,7 @@ public interface NoticeControllerDocs {
             )
     })
     ApiResponse<NoticeSearchListResponse> searchNotices(
+            @CurrentUserId Long userId,
             @Parameter(description = "검색 키워드 (최소 2자)", example = "장학") @RequestParam String searchWord,
             @Parameter(description = "정렬 기준 (latest: 최신순, deadline: 마감일순)", example = "latest") @RequestParam(defaultValue = "latest") String sort,
             @Parameter(description = "페이지 번호 (0부터 시작)", example = "0") @RequestParam int page,
