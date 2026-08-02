@@ -42,11 +42,12 @@ public class NoticeController implements NoticeControllerDocs {
     @Override
     @GetMapping("/search")
     public ApiResponse<NoticeSearchListResponse> searchNotices(
+            @CurrentUserId Long userId,
             @RequestParam String searchWord,
             @RequestParam(defaultValue = "latest") String sort,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        NoticeSearchListResponse response = noticeService.searchNotices(searchWord, sort, page, size);
+        NoticeSearchListResponse response = noticeService.searchNotices(userId, searchWord, sort, page, size);
         return ApiResponse.onSuccess(GeneralSuccessCode.OK, response);
     }
 
