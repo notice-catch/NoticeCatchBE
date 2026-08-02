@@ -4,11 +4,21 @@ spring:
     driver-class-name: org.mariadb.jdbc.Driver
     username: ${PROD_DB_USER}
     password: ${PROD_DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 10
+      idle-timeout: 300000
+      connection-timeout: 20000
+      max-lifetime: 1200000
+
   jpa:
-    database-platform: org.hibernate.dialect.MariaDBDialect
     hibernate:
       ddl-auto: validate
     show-sql: false
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: false
 
   data:
     redis:
@@ -42,6 +52,7 @@ spring:
             token-uri: https://kauth.kakao.com/oauth/token
             user-info-uri: https://kapi.kakao.com/v2/user/me
             user-name-attribute: id
+
 jwt:
   secret: ${JWT_SECRET}
   access-token-expiration: ${JWT_ACCESS_EXPIRATION:3600000} # 기본값 1시간
