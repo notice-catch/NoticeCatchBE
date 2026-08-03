@@ -27,7 +27,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -69,69 +72,49 @@ public class NotificationService {
         notificationRepository.markAllAsReadByUserId(userId);
     }
 
-    // 크롤러가 DB에 직접 넣는 신규 공지를 5분마다 스캔해 키워드 알림을 발송한다
+    // 크롤러가 DB에 직접 넣는 신규 공지를 5분마다 스캔해 키워드/카테고리 알림을 발송한다
     @Transactional
     @Scheduled(fixedDelay = 5 * 60 * 1000)
     public void notifyPendingNotices() {
         List<Notice> pendingNotices = noticeRepository.findByNotifiedFalse();
         for (Notice notice : pendingNotices) {
-            notifyKeywordMatches(notice);
-            notifyCategoryMatches(notice);
+            notifyMatchingUsers(notice);
             notice.markNotified();
         }
     }
 
-    private void notifyKeywordMatches(Notice notice) {
+    // 후보 유저 조회 1번 + 키워드 일괄 조회 1번으로 키워드/카테고리 매칭을 함께 처리한다
+    private void notifyMatchingUsers(Notice notice) {
         Long universityId = notice.getUniversity().getId();
-        List<User> candidates = userRepository
-                .findByDepartment_University_IdAndAllNotificationTrueAndKeywordNotificationTrue(universityId);
-
-        for (User user : candidates) {
-            if (!matchesDepartment(user, notice)) {
-                continue;
-            }
-
-            String matchedKeyword = findMatchedKeyword(user, notice);
-            if (matchedKeyword == null) {
-                continue;
-            }
-
-            // 알림함 예시(docs/API_SPEC.md)와 동일한 고정 문구
-            Notification notification = Notification.builder()
-                    .user(user)
-                    .notice(notice)
-                    .notificationType(NotificationType.KEYWORD)
-                    .title("🏷️ 내 키워드와 관련된 공지가 등록되었어요")
-                    .message(notice.getTitle())
-                    .build();
-            notificationRepository.save(notification);
-
-            fcmSender.send(user, notification.getTitle(), notification.getMessage(), notice.getId());
+        List<User> candidates = userRepository.findByDepartment_University_IdAndAllNotificationTrue(universityId).stream()
+                .filter(user -> matchesDepartment(user, notice))
+                .toList();
+        if (candidates.isEmpty()) {
+            return;
         }
-    }
 
-    // 관심 카테고리(장학/학사/취업/비교과) 알림 — 유저가 켜둔 카테고리와 공지의 카테고리가 일치하면 발송
-    private void notifyCategoryMatches(Notice notice) {
-        Long universityId = notice.getUniversity().getId();
+        Map<Long, List<UserKeyword>> keywordsByUserId = userKeywordRepository.findAllByUserIn(candidates).stream()
+                .collect(Collectors.groupingBy(userKeyword -> userKeyword.getUser().getId()));
         String categoryName = notice.getCategory().getName();
-        List<User> candidates = userRepository.findByDepartment_University_IdAndAllNotificationTrue(universityId);
 
+        List<Notification> notifications = new ArrayList<>();
         for (User user : candidates) {
-            if (!matchesDepartment(user, notice) || !matchesCategoryPreference(user, categoryName)) {
-                continue;
+            if (Boolean.TRUE.equals(user.getKeywordNotification())) {
+                String matchedKeyword = findMatchedKeyword(notice, keywordsByUserId.getOrDefault(user.getId(), List.of()));
+                if (matchedKeyword != null) {
+                    // 알림함 예시(docs/API_SPEC.md)와 동일한 고정 문구
+                    notifications.add(buildNotification(user, notice, NotificationType.KEYWORD,
+                            "🏷️ 내 키워드와 관련된 공지가 등록되었어요", notice.getTitle()));
+                }
             }
 
-            Notification notification = Notification.builder()
-                    .user(user)
-                    .notice(notice)
-                    .notificationType(NotificationType.CATEGORY)
-                    .title("📢 관심 카테고리에 새 공지가 등록되었어요")
-                    .message(notice.getTitle())
-                    .build();
-            notificationRepository.save(notification);
-
-            fcmSender.send(user, notification.getTitle(), notification.getMessage(), notice.getId());
+            if (matchesCategoryPreference(user, categoryName)) {
+                notifications.add(buildNotification(user, notice, NotificationType.CATEGORY,
+                        "📢 관심 카테고리에 새 공지가 등록되었어요", notice.getTitle()));
+            }
         }
+
+        sendAll(notifications, notice.getId());
     }
 
     // 마이페이지 알림 설정(scholarship/academic/employment/extracurricular)과 공지 카테고리명 매핑
@@ -154,8 +137,7 @@ public class NotificationService {
                 && user.getDepartment().getId().equals(notice.getDepartment().getId());
     }
 
-    private String findMatchedKeyword(User user, Notice notice) {
-        List<UserKeyword> keywords = userKeywordRepository.findAllByUser(user);
+    private String findMatchedKeyword(Notice notice, List<UserKeyword> keywords) {
         for (UserKeyword userKeyword : keywords) {
             String keyword = userKeyword.getKeyword();
             boolean inTitle = notice.getTitle().contains(keyword);
@@ -175,25 +157,40 @@ public class NotificationService {
         LocalDateTime threshold = now.plusDays(CLOSING_SOON_THRESHOLD_DAYS);
 
         List<UserNotice> candidates = userNoticeRepository.findClosingSoonCandidates(now, threshold);
+        List<Notification> notifications = new ArrayList<>();
         for (UserNotice userNotice : candidates) {
-            User user = userNotice.getUser();
             Notice notice = userNotice.getNotice();
-
             long daysLeft = ChronoUnit.DAYS.between(now.toLocalDate(), notice.getDeadlineAt().toLocalDate());
             String deadlineDate = notice.getDeadlineAt().format(DEADLINE_DATE_FORMAT);
 
             // 알림함 예시(docs/API_SPEC.md)와 동일한 고정 문구/포맷
-            Notification notification = Notification.builder()
-                    .user(user)
-                    .notice(notice)
-                    .notificationType(NotificationType.CLOSING)
-                    .title("📌 곧 마감되는 공지가 있어요")
-                    .message("[" + notice.getTitle() + "] D-" + daysLeft + " · " + deadlineDate + " 까지")
-                    .build();
-            notificationRepository.save(notification);
-
-            fcmSender.send(user, notification.getTitle(), notification.getMessage(), notice.getId());
+            notifications.add(buildNotification(userNotice.getUser(), notice, NotificationType.CLOSING,
+                    "📌 곧 마감되는 공지가 있어요",
+                    "[" + notice.getTitle() + "] D-" + daysLeft + " · " + deadlineDate + " 까지"));
             userNotice.markClosingNotified();
+        }
+
+        notificationRepository.saveAll(notifications);
+        for (Notification notification : notifications) {
+            fcmSender.send(notification.getUser(), notification.getTitle(), notification.getMessage(),
+                    notification.getNotice().getId());
+        }
+    }
+
+    private Notification buildNotification(User user, Notice notice, NotificationType type, String title, String message) {
+        return Notification.builder()
+                .user(user)
+                .notice(notice)
+                .notificationType(type)
+                .title(title)
+                .message(message)
+                .build();
+    }
+
+    private void sendAll(List<Notification> notifications, Long noticeId) {
+        notificationRepository.saveAll(notifications);
+        for (Notification notification : notifications) {
+            fcmSender.send(notification.getUser(), notification.getTitle(), notification.getMessage(), noticeId);
         }
     }
 }

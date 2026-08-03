@@ -9,9 +9,7 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
 
-    // 키워드 알림 배치 대상 — 해당 대학 소속이면서 전체/키워드 알림을 켜둔 유저
-    List<User> findByDepartment_University_IdAndAllNotificationTrueAndKeywordNotificationTrue(Long universityId);
-
-    // 카테고리 알림 배치 대상 — 해당 대학 소속이면서 전체 알림을 켜둔 유저 (세부 카테고리 플래그는 서비스에서 대조)
+    // 신규 공지 알림(키워드/카테고리) 배치 대상 — 해당 대학 소속이면서 전체 알림을 켜둔 유저.
+    // 키워드/카테고리 세부 플래그는 후보군이 정해진 뒤 서비스에서 대조한다.
     List<User> findByDepartment_University_IdAndAllNotificationTrue(Long universityId);
 }

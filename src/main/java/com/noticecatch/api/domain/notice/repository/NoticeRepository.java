@@ -43,6 +43,11 @@ public interface NoticeRepository extends JpaRepository<Notice, Long> {
 
     Slice<Notice> findByDeadlineAtIsNull(Pageable pageable);
 
-    // 키워드 알림 배치 대상 — 아직 알림 처리 안 한 공지
+    // 알림 배치 대상 — 아직 알림 처리 안 한 공지. 매칭 중 university/category/department를 반드시 읽으므로 한 번에 fetch join
+    @Query("SELECT n FROM Notice n " +
+            "JOIN FETCH n.university " +
+            "JOIN FETCH n.category " +
+            "LEFT JOIN FETCH n.department " +
+            "WHERE n.notified = false")
     List<Notice> findByNotifiedFalse();
 }
