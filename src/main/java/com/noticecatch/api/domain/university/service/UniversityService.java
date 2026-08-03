@@ -59,5 +59,7 @@ public class UniversityService {
         if (user.getDepartment() != null) { // 또는 user.hasDepartment() 메서드 활용
             throw new ProjectException(UniversityErrorCode.UNIVERSITY_ALREADY_EXISTS);
         }
+
+        user.changeUniversity(university);
     }
 }

@@ -5,8 +5,8 @@ import com.noticecatch.api.domain.notification.dto.response.NotificationListResp
 import com.noticecatch.api.domain.notification.service.NotificationService;
 import com.noticecatch.api.global.apiPayload.ApiResponse;
 import com.noticecatch.api.global.apiPayload.code.GeneralSuccessCode;
+import com.noticecatch.api.global.resolver.CurrentUserId;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -19,7 +19,7 @@ public class NotificationController implements NotificationControllerDocs {
     @Override
     @PostMapping("/users/device")
     public ApiResponse<Void> saveDeviceToken(
-            @AuthenticationPrincipal Long userId,
+            @CurrentUserId Long userId,
             @RequestBody DeviceTokenRequest request
     ) {
         notificationService.registerDeviceToken(userId, request);
@@ -29,7 +29,7 @@ public class NotificationController implements NotificationControllerDocs {
     @Override
     @GetMapping("/notifications")
     public ApiResponse<NotificationListResponse> getNotifications(
-            @AuthenticationPrincipal Long userId,
+            @CurrentUserId Long userId,
             @RequestParam int page,
             @RequestParam(defaultValue = "20") int size
     ) {
@@ -40,7 +40,7 @@ public class NotificationController implements NotificationControllerDocs {
     @Override
     @PatchMapping("/notifications/read")
     public ApiResponse<Void> readAllNotifications(
-            @AuthenticationPrincipal Long userId
+            @CurrentUserId Long userId
     ) {
         notificationService.readAllNotifications(userId);
         return ApiResponse.onSuccess(GeneralSuccessCode.OK, null);

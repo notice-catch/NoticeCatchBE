@@ -11,4 +11,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     // 키워드 알림 배치 대상 — 해당 대학 소속이면서 전체/키워드 알림을 켜둔 유저
     List<User> findByDepartment_University_IdAndAllNotificationTrueAndKeywordNotificationTrue(Long universityId);
+
+    // 카테고리 알림 배치 대상 — 해당 대학 소속이면서 전체 알림을 켜둔 유저 (세부 카테고리 플래그는 서비스에서 대조)
+    List<User> findByDepartment_University_IdAndAllNotificationTrue(Long universityId);
 }

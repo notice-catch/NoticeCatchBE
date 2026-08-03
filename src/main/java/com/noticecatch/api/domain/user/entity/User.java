@@ -1,6 +1,7 @@
 package com.noticecatch.api.domain.user.entity;
 
 import com.noticecatch.api.domain.department.entity.Department;
+import com.noticecatch.api.domain.university.entity.University;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
@@ -23,6 +24,12 @@ public class User {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "department_id", nullable = true)
     private Department department;
+
+    // 온보딩 중 대학만 먼저 선택하고 학과는 아직 안 고른 상태를 표현하기 위한 필드.
+    // 학과가 정해지면 department.getUniversity()가 진짜 소속 대학이 되고, 이 필드는 더 이상 쓰이지 않음.
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "university_id", nullable = true)
+    private University university;
 
     @Column(nullable = false, length = 255, unique = true)
     private String email;
@@ -114,6 +121,10 @@ public class User {
 
     public void changeDepartment(Department department) {
         this.department = department;
+    }
+
+    public void changeUniversity(University university) {
+        this.university = university;
     }
 
     public void updateProfile(String nickname, Integer grade) {

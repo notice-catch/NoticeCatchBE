@@ -76,6 +76,7 @@ public class NotificationService {
         List<Notice> pendingNotices = noticeRepository.findByNotifiedFalse();
         for (Notice notice : pendingNotices) {
             notifyKeywordMatches(notice);
+            notifyCategoryMatches(notice);
             notice.markNotified();
         }
     }
@@ -105,8 +106,43 @@ public class NotificationService {
                     .build();
             notificationRepository.save(notification);
 
-            fcmSender.send(user, notification.getTitle(), notification.getMessage());
+            fcmSender.send(user, notification.getTitle(), notification.getMessage(), notice.getId());
         }
+    }
+
+    // 관심 카테고리(장학/학사/취업/비교과) 알림 — 유저가 켜둔 카테고리와 공지의 카테고리가 일치하면 발송
+    private void notifyCategoryMatches(Notice notice) {
+        Long universityId = notice.getUniversity().getId();
+        String categoryName = notice.getCategory().getName();
+        List<User> candidates = userRepository.findByDepartment_University_IdAndAllNotificationTrue(universityId);
+
+        for (User user : candidates) {
+            if (!matchesDepartment(user, notice) || !matchesCategoryPreference(user, categoryName)) {
+                continue;
+            }
+
+            Notification notification = Notification.builder()
+                    .user(user)
+                    .notice(notice)
+                    .notificationType(NotificationType.CATEGORY)
+                    .title("📢 관심 카테고리에 새 공지가 등록되었어요")
+                    .message(notice.getTitle())
+                    .build();
+            notificationRepository.save(notification);
+
+            fcmSender.send(user, notification.getTitle(), notification.getMessage(), notice.getId());
+        }
+    }
+
+    // 마이페이지 알림 설정(scholarship/academic/employment/extracurricular)과 공지 카테고리명 매핑
+    private boolean matchesCategoryPreference(User user, String categoryName) {
+        return switch (categoryName) {
+            case "장학" -> Boolean.TRUE.equals(user.getScholarship());
+            case "학사" -> Boolean.TRUE.equals(user.getAcademic());
+            case "취업" -> Boolean.TRUE.equals(user.getEmployment());
+            case "비교과" -> Boolean.TRUE.equals(user.getExtracurricular());
+            default -> false;
+        };
     }
 
     // 학과 공지(department != null)는 해당 학과 유저만, 전체 공지(department == null)는 대학 소속이면 전부 대상
@@ -156,7 +192,7 @@ public class NotificationService {
                     .build();
             notificationRepository.save(notification);
 
-            fcmSender.send(user, notification.getTitle(), notification.getMessage());
+            fcmSender.send(user, notification.getTitle(), notification.getMessage(), notice.getId());
             userNotice.markClosingNotified();
         }
     }

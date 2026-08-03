@@ -20,18 +20,20 @@ public class FcmSender {
     private final ObjectProvider<FirebaseMessaging> firebaseMessagingProvider;
 
     // 토큰이 만료/미등록으로 확인되면 user.pushToken을 비운다 — 호출자가 트랜잭션 안에서 호출해야 반영됨
-    public void send(User user, String title, String body) {
+    public void send(User user, String title, String body, Long noticeId) {
         FirebaseMessaging firebaseMessaging = firebaseMessagingProvider.getIfAvailable();
         if (firebaseMessaging == null || user.getPushToken() == null || user.getPushToken().isBlank()) {
             return;
         }
 
+        // data 페이로드로 noticeId를 실어서, 클라이언트가 알림 탭 시 해당 공지 상세로 딥링크할 수 있게 함
         Message message = Message.builder()
                 .setToken(user.getPushToken())
                 .setNotification(Notification.builder()
                         .setTitle(title)
                         .setBody(body)
                         .build())
+                .putData("noticeId", String.valueOf(noticeId))
                 .build();
 
         try {
