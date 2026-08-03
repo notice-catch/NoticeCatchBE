@@ -127,6 +127,15 @@ public interface NotificationControllerDocs {
                             "message": "[산학협력단] 2026 대학생 IT 창업 아이디어 공모전 개최",
                             "isRead": true,
                             "createdAt": "2026-07-01T15:30:00"
+                          },
+                          {
+                            "notificationId": 97,
+                            "noticeId": 8,
+                            "notificationType": "CATEGORY",
+                            "title": "📢 관심 카테고리에 새 공지가 등록되었어요",
+                            "message": "2026학년도 2학기 수강신청 일정 안내",
+                            "isRead": true,
+                            "createdAt": "2026-06-30T09:00:00"
                           }
                         ],
                         "page": 0,
