@@ -34,15 +34,7 @@ public class NoticeService {
     private final UserRepository userRepository;
 
     public SliceResponse<NoticeSearchItemResponse> getNotices(Long userId, int page, int size, String keyword) {
-        // 사용자 조회 및 대학교 검증
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ProjectException(UserErrorCode.USER_NOT_FOUND));
-
-        if (user.getDepartment() == null || user.getDepartment().getUniversity() == null) {
-            throw new ProjectException(UniversityErrorCode.UNIVERSITY_NOT_FOUND);
-        }
-
-        Long universityId = user.getDepartment().getUniversity().getId();
+        Long universityId = getUserUniversityId(userId);
 
         // 최신순 정렬 페이징 생성
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "postedAt"));
@@ -75,14 +67,7 @@ public class NoticeService {
     }
 
     public NoticeSearchListResponse searchNotices(Long userId, String searchWord, String sort, int page, int size) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ProjectException(UserErrorCode.USER_NOT_FOUND));
-
-        if (user.getDepartment() == null || user.getDepartment().getUniversity() == null) {
-            throw new ProjectException(UniversityErrorCode.UNIVERSITY_NOT_FOUND);
-        }
-
-        Long universityId = user.getDepartment().getUniversity().getId();
+        Long universityId = getUserUniversityId(userId);
 
         if (searchWord == null || searchWord.trim().length() < 2) {
             throw new ProjectException(NoticeErrorCode.SEARCH_KEYWORD_TOO_SHORT);
@@ -123,5 +108,16 @@ public class NoticeService {
         Slice<Notice> noticeSlice = noticeRepository.findByDeadlineAtIsNull(pageable);
 
         return noticeSlice.map(NoticeSearchItemResponse::from);
+    }
+
+    private Long getUserUniversityId(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ProjectException(UserErrorCode.USER_NOT_FOUND));
+
+        if (user.getDepartment() == null || user.getDepartment().getUniversity() == null) {
+            throw new ProjectException(UniversityErrorCode.UNIVERSITY_NOT_FOUND);
+        }
+
+        return user.getDepartment().getUniversity().getId();
     }
 }

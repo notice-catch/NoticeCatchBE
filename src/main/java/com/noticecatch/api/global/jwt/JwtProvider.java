@@ -39,21 +39,17 @@ public class JwtProvider {
 
     // Access Token 생성
     public String createAccessToken(Long userId) {
-        Date now = new Date();
-        Date validity = new Date(now.getTime() + accessTokenExpiration);
-
-        return Jwts.builder()
-                .subject(String.valueOf(userId))
-                .issuedAt(now)
-                .expiration(validity)
-                .signWith(key)
-                .compact();
+        return createToken(userId, accessTokenExpiration);
     }
 
     // Refresh Token 생성
     public String createRefreshToken(Long userId) {
+        return createToken(userId, refreshTokenExpiration);
+    }
+
+    private String createToken(Long userId, long expirationMillis) {
         Date now = new Date();
-        Date validity = new Date(now.getTime() + refreshTokenExpiration);
+        Date validity = new Date(now.getTime() + expirationMillis);
 
         return Jwts.builder()
                 .subject(String.valueOf(userId))

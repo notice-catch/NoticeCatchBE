@@ -82,4 +82,15 @@ public class Notice {
         if (this.deadlineAt == null) return false;
         return LocalDateTime.now().isAfter(this.deadlineAt);
     }
+
+    // 출처 표시명 — 학과 공지면 학과명, 아니면 대학 전체 공지로 간주해 대학명, 둘 다 없으면 기본값
+    public String getSourceName() {
+        if (this.department != null) {
+            return this.department.getName();
+        }
+        if (this.university != null) {
+            return this.university.getName();
+        }
+        return "대학 본부";
+    }
 }

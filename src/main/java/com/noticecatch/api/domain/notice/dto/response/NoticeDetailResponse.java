@@ -58,7 +58,7 @@ public class NoticeDetailResponse {
                 .noticeId(notice.getId())
                 .categoryTag(notice.getCategory() != null ? notice.getCategory().getName() : null)
                 .title(notice.getTitle())
-                .source(notice.getDepartment() != null ? notice.getDepartment().getName() : "대학 본부")
+                .source(notice.getSourceName())
                 .createdAt(notice.getPostedAt()) // 원본 작성일(postedAt) 매핑
                 .deadlineAt(notice.getDeadlineAt())
                 .content(notice.getContent())

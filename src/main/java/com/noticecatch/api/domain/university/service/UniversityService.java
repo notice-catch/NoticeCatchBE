@@ -5,8 +5,8 @@ import com.noticecatch.api.domain.university.entity.University;
 import com.noticecatch.api.domain.university.exception.UniversityErrorCode;
 import com.noticecatch.api.domain.university.repository.UniversityRepository;
 import com.noticecatch.api.domain.user.entity.User;
+import com.noticecatch.api.domain.user.exception.UserErrorCode;
 import com.noticecatch.api.domain.user.repository.UserRepository;
-import com.noticecatch.api.global.apiPayload.code.GeneralErrorCode;
 import com.noticecatch.api.global.apiPayload.exception.ProjectException;
 import com.noticecatch.api.global.apiPayload.response.ListResponse;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +26,7 @@ public class UniversityService {
     public ListResponse<UniversityResponse> getUniversities(Long userId) {
         // 유저 존재 여부 검증
         if (!userRepository.existsById(userId)) {
-            throw new ProjectException(GeneralErrorCode.UNAUTHORIZED);
+            throw new ProjectException(UserErrorCode.USER_NOT_FOUND);
         }
 
         // 대학 목록 조회
@@ -53,7 +53,7 @@ public class UniversityService {
 
         // 유저 존재 여부 검증 및 엔티티 조회
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ProjectException(GeneralErrorCode.UNAUTHORIZED));
+                .orElseThrow(() -> new ProjectException(UserErrorCode.USER_NOT_FOUND));
 
         // 대학교/학과가 등록되어 있는지 검증
         if (user.getDepartment() != null) { // 또는 user.hasDepartment() 메서드 활용

@@ -7,22 +7,22 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 public interface NoticeRepository extends JpaRepository<Notice, Long> {
 
-    Slice<Notice> findAllBy(Pageable pageable);
+    // 목록 응답이 category/university/department를 매번 읽으므로(NoticeSearchItemResponse.from) 한 번에 fetch join
+    @Query("SELECT n FROM Notice n JOIN FETCH n.category JOIN FETCH n.university LEFT JOIN FETCH n.department " +
+            "WHERE n.university.id = :universityId AND n.category.name = :categoryName")
+    Slice<Notice> findByUniversity_IdAndCategory_Name(@Param("universityId") Long universityId,
+                                                        @Param("categoryName") String categoryName,
+                                                        Pageable pageable);
 
-    Slice<Notice> findByCategory_Name(String categoryName, Pageable pageable);
+    @Query("SELECT n FROM Notice n JOIN FETCH n.category JOIN FETCH n.university LEFT JOIN FETCH n.department " +
+            "WHERE n.university.id = :universityId")
+    Slice<Notice> findByUniversity_Id(@Param("universityId") Long universityId, Pageable pageable);
 
-    // 대학교의 카테고리 공지 목록 조회
-    Slice<Notice> findByUniversity_IdAndCategory_Name(Long universityId, String categoryName, Pageable pageable);
-
-    // 대학교의 공지 목록 조회
-    Slice<Notice> findByUniversity_Id(Long universityId, Pageable pageable);
-
-    @Query("SELECT n FROM Notice n " +
+    @Query("SELECT n FROM Notice n JOIN FETCH n.category JOIN FETCH n.university LEFT JOIN FETCH n.department " +
             "WHERE n.university.id = :universityId " +
             "AND (n.title LIKE %:keyword% OR n.content LIKE %:keyword%)")
     Slice<Notice> searchByKeywordAndUniversityId(@Param("universityId") Long universityId,
@@ -36,11 +36,13 @@ public interface NoticeRepository extends JpaRepository<Notice, Long> {
             "ORDER BY FUNCTION('DATE_FORMAT', n.deadlineAt, '%Y-%m-%d') ASC")
     List<String> findDistinctDeadlineDatesByYearMonth(@Param("yearMonth") String yearMonth);
 
-    @Query("SELECT n FROM Notice n " +
+    @Query("SELECT n FROM Notice n JOIN FETCH n.category JOIN FETCH n.university LEFT JOIN FETCH n.department " +
             "WHERE n.deadlineAt IS NOT NULL " +
             "AND FUNCTION('DATE_FORMAT', n.deadlineAt, '%Y-%m-%d') = :date")
     Slice<Notice> findByDeadlineAtDate(@Param("date") String date, Pageable pageable);
 
+    @Query("SELECT n FROM Notice n JOIN FETCH n.category JOIN FETCH n.university LEFT JOIN FETCH n.department " +
+            "WHERE n.deadlineAt IS NULL")
     Slice<Notice> findByDeadlineAtIsNull(Pageable pageable);
 
     // 알림 배치 대상 — 아직 알림 처리 안 한 공지. 매칭 중 university/category/department를 반드시 읽으므로 한 번에 fetch join

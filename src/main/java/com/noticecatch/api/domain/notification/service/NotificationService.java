@@ -114,7 +114,7 @@ public class NotificationService {
             }
         }
 
-        sendAll(notifications, notice.getId());
+        sendAll(notifications);
     }
 
     // 마이페이지 알림 설정(scholarship/academic/employment/extracurricular)과 공지 카테고리명 매핑
@@ -170,11 +170,7 @@ public class NotificationService {
             userNotice.markClosingNotified();
         }
 
-        notificationRepository.saveAll(notifications);
-        for (Notification notification : notifications) {
-            fcmSender.send(notification.getUser(), notification.getTitle(), notification.getMessage(),
-                    notification.getNotice().getId());
-        }
+        sendAll(notifications);
     }
 
     private Notification buildNotification(User user, Notice notice, NotificationType type, String title, String message) {
@@ -187,10 +183,11 @@ public class NotificationService {
                 .build();
     }
 
-    private void sendAll(List<Notification> notifications, Long noticeId) {
+    private void sendAll(List<Notification> notifications) {
         notificationRepository.saveAll(notifications);
         for (Notification notification : notifications) {
-            fcmSender.send(notification.getUser(), notification.getTitle(), notification.getMessage(), noticeId);
+            fcmSender.send(notification.getUser(), notification.getTitle(), notification.getMessage(),
+                    notification.getNotice().getId());
         }
     }
 }

@@ -94,25 +94,12 @@ public class User {
         this.pushToken = newPushToken;
     }
 
-    //전체 알람 설정
-    public void toggleAllNotification(boolean status) {
-        this.allNotification = status;
-    }
-
     // 알림 설정 전체 갱신 (부분 수정은 서비스 계층에서 기존 값과 병합 후 호출)
     public void updateAlarmSettings(boolean allNotification, boolean closingNotification, boolean keywordNotification,
                                      boolean scholarship, boolean extracurricular, boolean academic, boolean employment) {
         this.allNotification = allNotification;
         this.closingNotification = closingNotification;
         this.keywordNotification = keywordNotification;
-        this.scholarship = scholarship;
-        this.extracurricular = extracurricular;
-        this.academic = academic;
-        this.employment = employment;
-    }
-
-    //키워드별 알람 설정
-    public void updateCategoryNotifications(boolean scholarship, boolean extracurricular, boolean academic, boolean employment) {
         this.scholarship = scholarship;
         this.extracurricular = extracurricular;
         this.academic = academic;
@@ -135,5 +122,9 @@ public class User {
 
     public void withdraw() {
         this.status = "WITHDRAWN";
+    }
+
+    public boolean isWithdrawn() {
+        return "WITHDRAWN".equals(this.status);
     }
 }

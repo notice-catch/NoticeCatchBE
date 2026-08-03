@@ -13,7 +13,6 @@ import com.noticecatch.api.domain.user.dto.response.ProfileResponse;
 import com.noticecatch.api.domain.user.entity.User;
 import com.noticecatch.api.domain.user.exception.UserErrorCode;
 import com.noticecatch.api.domain.user.repository.UserRepository;
-import com.noticecatch.api.global.apiPayload.code.GeneralErrorCode;
 import com.noticecatch.api.global.apiPayload.exception.ProjectException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -24,8 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class UserService {
 
-    private static final String WITHDRAWN_STATUS = "WITHDRAWN";
-
     private final UserRepository userRepository;
     private final DepartmentRepository departmentRepository;
     private final UserNoticeRepository userNoticeRepository;
@@ -33,9 +30,8 @@ public class UserService {
 
     @Transactional
     public void updateOnboardingProfile(Long userId, Long departmentId, ProfileUpdateRequest request) {
-        // 유저 존재 여부 검증
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ProjectException(GeneralErrorCode.UNAUTHORIZED));
+        // 유저 존재 여부 검증 (탈퇴 여부 포함)
+        User user = getActiveUser(userId);
 
         // 학과 존재 여부 검증
         Department department = departmentRepository.findById(departmentId)
@@ -103,7 +99,7 @@ public class UserService {
     private User getActiveUser(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ProjectException(UserErrorCode.USER_NOT_FOUND));
-        if (WITHDRAWN_STATUS.equals(user.getStatus())) {
+        if (user.isWithdrawn()) {
             throw new ProjectException(UserErrorCode.USER_NOT_FOUND);
         }
         return user;
