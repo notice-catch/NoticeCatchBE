@@ -59,10 +59,6 @@ public class UserNotice {
         this.isScrapped = !this.isScrapped;
     }
 
-    public void markAsRead() {
-        this.isRead = true;
-    }
-
     public void markClosingNotified() {
         this.closingNotified = true;
     }

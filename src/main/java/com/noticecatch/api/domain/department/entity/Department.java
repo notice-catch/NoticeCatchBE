@@ -30,12 +30,4 @@ public class Department {
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
     }
-
-    // 학과명 수정
-    public void updateName(String newName) {
-        if (newName == null || newName.isBlank()) {
-            throw new IllegalArgumentException("학과명은 필수입니다.");
-        }
-        this.name = newName;
-    }
 }

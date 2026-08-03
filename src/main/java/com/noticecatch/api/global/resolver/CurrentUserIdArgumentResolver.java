@@ -18,8 +18,6 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 @Component
 public class CurrentUserIdArgumentResolver implements HandlerMethodArgumentResolver {
 
-    private static final String TEMP_USER_ID_HEADER = "X-USER-ID";
-
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
         return parameter.hasParameterAnnotation(CurrentUserId.class)
