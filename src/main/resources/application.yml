@@ -7,3 +7,6 @@ gemini:
   api:
     key: ${GEMINI_API_KEY:}
     url: https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent
+firebase:
+  credentials:
+    base64: ${FIREBASE_CREDENTIALS_BASE64:}
