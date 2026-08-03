@@ -1,0 +1,17 @@
+# PR 브랜치명(docs/CONVENTION.md의 브랜치 규칙)을 기준으로 라벨을 자동 부여합니다.
+# feat/기능명, fix/오류명, docs/수정내용, refactor/개선내용, test/테스트내용
+
+enhancement:
+  - head-branch: ['^feat/']
+
+bug:
+  - head-branch: ['^fix/']
+
+documentation:
+  - head-branch: ['^docs/']
+
+refactor:
+  - head-branch: ['^refactor/']
+
+test:
+  - head-branch: ['^test/']

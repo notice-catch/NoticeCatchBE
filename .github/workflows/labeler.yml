@@ -1,0 +1,21 @@
+name: PR Auto Labeler
+
+# PR이 열리거나, 대상 브랜치가 바뀌거나(reopen), 새 커밋이 push될 때(synchronize) 라벨을 갱신합니다.
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  label:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Apply labels based on branch name
+        uses: actions/labeler@v7
+        with:
+          repo-token: "${{ secrets.GITHUB_TOKEN }}"
+          configuration-path: .github/labeler.yml
+          sync-labels: true
