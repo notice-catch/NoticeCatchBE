@@ -29,6 +29,11 @@ public class RedisService {
         redisTemplate.delete(REFRESH_TOKEN_PREFIX + userId);
     }
 
+    // 저장된 Refresh Token 조회 (토큰 재발급 시 제출된 토큰과 대조용)
+    public String getRefreshToken(Long userId) {
+        return redisTemplate.opsForValue().get(REFRESH_TOKEN_PREFIX + userId);
+    }
+
     // Access Token 블랙리스트 저장
     public void setBlackList(String accessToken, long expirationMillis) {
         if (expirationMillis > 0) {
