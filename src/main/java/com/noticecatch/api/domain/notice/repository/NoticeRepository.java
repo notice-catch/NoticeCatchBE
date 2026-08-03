@@ -42,4 +42,7 @@ public interface NoticeRepository extends JpaRepository<Notice, Long> {
     Slice<Notice> findByDeadlineAtDate(@Param("date") String date, Pageable pageable);
 
     Slice<Notice> findByDeadlineAtIsNull(Pageable pageable);
+
+    // 키워드 알림 배치 대상 — 아직 알림 처리 안 한 공지
+    List<Notice> findByNotifiedFalse();
 }
