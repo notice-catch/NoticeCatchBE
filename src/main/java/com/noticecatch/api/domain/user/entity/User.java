@@ -121,6 +121,7 @@ public class User {
 
     public void changeDepartment(Department department) {
         this.department = department;
+        this.university = null; // department.getUniversity()가 진짜 소속 대학이 되므로, 온보딩 중간값이던 이 필드는 정리
     }
 
     public void changeUniversity(University university) {
