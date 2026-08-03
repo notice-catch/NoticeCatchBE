@@ -3,6 +3,8 @@ package com.noticecatch.api.domain.auth.service;
 import com.noticecatch.api.domain.auth.dto.request.LoginRequest;
 import com.noticecatch.api.domain.auth.dto.response.LoginResponse;
 import com.noticecatch.api.domain.auth.dto.response.OAuthUserInfo;
+import com.noticecatch.api.domain.auth.dto.response.TokenReissueResponse;
+import com.noticecatch.api.domain.auth.exception.AuthErrorCode;
 import com.noticecatch.api.domain.user.entity.User;
 import com.noticecatch.api.domain.user.exception.UserErrorCode;
 import com.noticecatch.api.domain.user.repository.UserRepository;
@@ -63,6 +65,31 @@ public class AuthService {
                 .build();
 
         return userRepository.save(newUser);
+    }
+
+    public TokenReissueResponse reissueToken(String refreshToken) {
+        // 1. 서명/만료 검증
+        if (!jwtProvider.validateToken(refreshToken)) {
+            throw new ProjectException(AuthErrorCode.INVALID_REFRESH_TOKEN);
+        }
+
+        Long userId = jwtProvider.getUserId(refreshToken);
+
+        // 2. Redis에 저장된 토큰과 일치하는지 대조 (로그아웃되었거나, 이미 재발급되어 회전된 토큰 재사용 방지)
+        String savedRefreshToken = redisService.getRefreshToken(userId);
+        if (savedRefreshToken == null || !savedRefreshToken.equals(refreshToken)) {
+            throw new ProjectException(AuthErrorCode.INVALID_REFRESH_TOKEN);
+        }
+
+        // 3. Access/Refresh Token 재발급 및 Redis 갱신 (Refresh Token Rotation)
+        String newAccessToken = jwtProvider.createAccessToken(userId);
+        String newRefreshToken = jwtProvider.createRefreshToken(userId);
+        redisService.saveRefreshToken(userId, newRefreshToken, jwtProvider.getRefreshTokenExpirationMillis());
+
+        return TokenReissueResponse.builder()
+                .accessToken(newAccessToken)
+                .refreshToken(newRefreshToken)
+                .build();
     }
 
     /**
