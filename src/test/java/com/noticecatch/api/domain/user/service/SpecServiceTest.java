@@ -50,6 +50,10 @@ class SpecServiceTest {
         return User.builder().id(id).email("a@a.com").nickname("유저").build();
     }
 
+    private User withdrawnUser(Long id) {
+        return User.builder().id(id).email("a@a.com").nickname("유저").status("WITHDRAWN").build();
+    }
+
     private Spec spec(Long id, User owner) {
         return Spec.builder()
                 .id(id).user(owner).category("AWARD").title("수상 제목")
@@ -117,6 +121,18 @@ class SpecServiceTest {
                 .isInstanceOf(ProjectException.class)
                 .extracting(e -> ((ProjectException) e).getErrorCode())
                 .isEqualTo(SpecErrorCode.MISSING_REQUIRED_FIELD);
+    }
+
+    @Test
+    void 탈퇴한_유저가_스펙을_조회하면_USER_NOT_FOUND를_던진다() {
+        given(userRepository.findById(1L)).willReturn(Optional.of(withdrawnUser(1L)));
+
+        assertThatThrownBy(() -> specService.getSpecs(1L, "ALL", "latest", pageable()))
+                .isInstanceOf(ProjectException.class)
+                .extracting(e -> ((ProjectException) e).getErrorCode())
+                .isEqualTo(UserErrorCode.USER_NOT_FOUND);
+
+        verify(specRepository, never()).findAllByUser(any(), any());
     }
 
     @Test

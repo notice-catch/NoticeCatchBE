@@ -142,7 +142,11 @@ public class SpecService {
     }
 
     private User getUser(Long userId) {
-        return userRepository.findById(userId)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ProjectException(UserErrorCode.USER_NOT_FOUND));
+        if (user.isWithdrawn()) {
+            throw new ProjectException(UserErrorCode.USER_NOT_FOUND);
+        }
+        return user;
     }
 }

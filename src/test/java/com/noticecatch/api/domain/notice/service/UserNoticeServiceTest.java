@@ -55,6 +55,10 @@ class UserNoticeServiceTest {
         return User.builder().id(id).email("a@a.com").nickname("유저").build();
     }
 
+    private User withdrawnUser(Long id) {
+        return User.builder().id(id).email("a@a.com").nickname("유저").status("WITHDRAWN").build();
+    }
+
     private Notice notice(Long id) {
         University university = University.builder().id(1L).name("가천대학교").build();
         Category category = Category.builder().id(1L).name("장학").build();
@@ -114,6 +118,18 @@ class UserNoticeServiceTest {
                 .isInstanceOf(ProjectException.class)
                 .extracting(e -> ((ProjectException) e).getErrorCode())
                 .isEqualTo(UserErrorCode.USER_NOT_FOUND);
+    }
+
+    @Test
+    void 탈퇴한_유저가_스크랩하면_USER_NOT_FOUND를_던진다() {
+        given(userRepository.findById(1L)).willReturn(Optional.of(withdrawnUser(1L)));
+
+        assertThatThrownBy(() -> userNoticeService.scrapNotice(1L, 10L))
+                .isInstanceOf(ProjectException.class)
+                .extracting(e -> ((ProjectException) e).getErrorCode())
+                .isEqualTo(UserErrorCode.USER_NOT_FOUND);
+
+        verify(noticeRepository, never()).findById(any());
     }
 
     @Test
