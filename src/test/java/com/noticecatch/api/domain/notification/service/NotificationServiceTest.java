@@ -1,31 +1,35 @@
 package com.noticecatch.api.domain.notification.service;
 
-import com.noticecatch.api.domain.department.entity.Department;
-import com.noticecatch.api.domain.keyword.entity.UserKeyword;
-import com.noticecatch.api.domain.keyword.repository.UserKeywordRepository;
-import com.noticecatch.api.domain.notice.entity.Category;
-import com.noticecatch.api.domain.notice.entity.Notice;
-import com.noticecatch.api.domain.notice.entity.UserNotice;
-import com.noticecatch.api.domain.notice.repository.NoticeRepository;
-import com.noticecatch.api.domain.notice.repository.UserNoticeRepository;
+import com.noticecatch.api.domain.notification.dto.request.DeviceTokenRequest;
+import com.noticecatch.api.domain.notification.dto.response.NotificationListResponse;
 import com.noticecatch.api.domain.notification.entity.Notification;
 import com.noticecatch.api.domain.notification.entity.NotificationType;
+import com.noticecatch.api.domain.notification.exception.NotificationErrorCode;
 import com.noticecatch.api.domain.notification.repository.NotificationRepository;
-import com.noticecatch.api.domain.university.entity.University;
 import com.noticecatch.api.domain.user.entity.User;
+import com.noticecatch.api.domain.user.exception.UserErrorCode;
 import com.noticecatch.api.domain.user.repository.UserRepository;
+import com.noticecatch.api.global.apiPayload.exception.ProjectException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.SliceImpl;
+import org.springframework.test.util.ReflectionTestUtils;
 
-import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.BDDMockito.*;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class NotificationServiceTest {
@@ -35,210 +39,124 @@ class NotificationServiceTest {
     @Mock
     private UserRepository userRepository;
     @Mock
-    private NoticeRepository noticeRepository;
-    @Mock
-    private UserKeywordRepository userKeywordRepository;
-    @Mock
-    private UserNoticeRepository userNoticeRepository;
+    private NotificationBatchService notificationBatchService;
     @Mock
     private FcmSender fcmSender;
 
     private NotificationService notificationService;
 
-    private University university;
-    private Department department;
-    private Category scholarshipCategory;
-
     @BeforeEach
     void setUp() {
-        notificationService = new NotificationService(
-                notificationRepository, userRepository, noticeRepository,
-                userKeywordRepository, userNoticeRepository, fcmSender);
-
-        university = University.builder().id(1L).name("테스트대학교").build();
-        department = Department.builder().id(1L).university(university).name("컴퓨터공학과").build();
-        scholarshipCategory = Category.builder().id(1L).name("장학").build();
+        notificationService = new NotificationService(notificationRepository, userRepository, notificationBatchService, fcmSender);
     }
 
-    private User user(Long id, Department dept, boolean keywordNotification, boolean scholarship) {
-        return User.builder()
-                .id(id)
-                .department(dept)
-                .email("user" + id + "@example.com")
-                .nickname("유저" + id)
-                .allNotification(true)
-                .keywordNotification(keywordNotification)
-                .scholarship(scholarship)
-                .extracurricular(false)
-                .academic(false)
-                .employment(false)
-                .pushToken("token-" + id)
-                .build();
+    private User user(Long id) {
+        return User.builder().id(id).email("a@a.com").nickname("유저").build();
     }
 
-    private Notice notice(Long id, Department dept, Category category, String title, String content) {
-        return Notice.builder()
-                .id(id)
-                .university(university)
-                .category(category)
-                .department(dept)
-                .title(title)
-                .content(content)
-                .notified(false)
-                .build();
+    private DeviceTokenRequest deviceTokenRequest(String pushToken) {
+        DeviceTokenRequest request = new DeviceTokenRequest();
+        ReflectionTestUtils.setField(request, "pushToken", pushToken);
+        return request;
     }
 
     @Test
-    void 미처리_공지가_없으면_아무일도_하지_않는다() {
-        given(noticeRepository.findByNotifiedFalse()).willReturn(List.of());
+    void 디바이스토큰이_비어있으면_PUSH_TOKEN_INVALID를_던진다() {
+        assertThatThrownBy(() -> notificationService.registerDeviceToken(1L, deviceTokenRequest(" ")))
+                .isInstanceOf(ProjectException.class)
+                .extracting(e -> ((ProjectException) e).getErrorCode())
+                .isEqualTo(NotificationErrorCode.PUSH_TOKEN_INVALID);
+
+        verify(userRepository, never()).findById(any());
+    }
+
+    @Test
+    void 존재하지_않는_유저면_디바이스토큰_등록시_USER_NOT_FOUND를_던진다() {
+        given(userRepository.findById(999L)).willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> notificationService.registerDeviceToken(999L, deviceTokenRequest("token")))
+                .isInstanceOf(ProjectException.class)
+                .extracting(e -> ((ProjectException) e).getErrorCode())
+                .isEqualTo(UserErrorCode.USER_NOT_FOUND);
+    }
+
+    @Test
+    void 정상_요청이면_디바이스토큰을_갱신한다() {
+        User user = user(1L);
+        given(userRepository.findById(1L)).willReturn(Optional.of(user));
+
+        notificationService.registerDeviceToken(1L, deviceTokenRequest("new-token"));
+
+        assertThat(user.getPushToken()).isEqualTo("new-token");
+    }
+
+    @Test
+    void 알림함_목록을_페이지네이션으로_조회한다() {
+        User user = user(1L);
+        Notification notification = Notification.builder()
+                .id(1L).user(user).notificationType(NotificationType.KEYWORD)
+                .title("제목").message("메시지").isRead(false).build();
+        Slice<Notification> slice = new SliceImpl<>(List.of(notification));
+        given(notificationRepository.findByUserIdOrderByCreatedAtDesc(eq(1L), any(PageRequest.class))).willReturn(slice);
+
+        NotificationListResponse response = notificationService.getNotifications(1L, 0, 10);
+
+        assertThat(response.getContent()).hasSize(1);
+        assertThat(response.getContent().get(0).getTitle()).isEqualTo("제목");
+    }
+
+    @Test
+    void 알림_전체읽음_처리를_위임한다() {
+        notificationService.readAllNotifications(1L);
+
+        verify(notificationRepository).markAllAsReadByUserId(1L);
+    }
+
+    @Test
+    void 발송할_알림이_없으면_FCM을_호출하지_않는다() {
+        given(notificationBatchService.persistPendingNoticeNotifications()).willReturn(List.of());
 
         notificationService.notifyPendingNotices();
 
-        verify(notificationRepository, never()).saveAll(any());
-        verify(fcmSender, never()).send(any(), any(), any(), any());
+        verify(fcmSender, never()).sendBatch(any());
+        verify(notificationBatchService, never()).clearPushTokens(any());
     }
 
     @Test
-    void 매칭되는_유저가_없으면_알림없이_notified만_true로_바뀐다() {
-        Notice notice = notice(1L, department, scholarshipCategory, "장학금 안내", "내용");
-        given(noticeRepository.findByNotifiedFalse()).willReturn(List.of(notice));
-        given(userRepository.findByDepartment_University_IdAndAllNotificationTrue(1L)).willReturn(List.of());
+    void 발송_실패한_토큰이_없으면_토큰정리를_호출하지_않는다() {
+        List<PendingPush> pushes = List.of(new PendingPush(1L, "token-1", "제목", "내용", 10L));
+        given(notificationBatchService.persistPendingNoticeNotifications()).willReturn(pushes);
+        given(fcmSender.sendBatch(pushes)).willReturn(List.of());
 
         notificationService.notifyPendingNotices();
 
-        verify(notificationRepository, never()).saveAll(any());
-        verify(fcmSender, never()).send(any(), any(), any(), any());
-        assertThat(notice.getNotified()).isTrue();
+        verify(fcmSender).sendBatch(pushes);
+        verify(notificationBatchService, never()).clearPushTokens(any());
     }
 
     @Test
-    void 키워드가_제목에_포함되면_KEYWORD_알림을_생성하고_발송한다() {
-        Notice notice = notice(1L, department, scholarshipCategory, "2026 장학금 신청 안내", "내용");
-        User user = user(1L, department, true, false); // 카테고리는 안 맞고 키워드만
-        UserKeyword keyword = UserKeyword.builder().id(1L).user(user).keyword("장학금").keywordType("CUSTOM").build();
-
-        given(noticeRepository.findByNotifiedFalse()).willReturn(List.of(notice));
-        given(userRepository.findByDepartment_University_IdAndAllNotificationTrue(1L)).willReturn(List.of(user));
-        given(userKeywordRepository.findAllByUserIn(List.of(user))).willReturn(List.of(keyword));
+    void UNREGISTERED_토큰이_있으면_해당_유저의_토큰을_정리한다() {
+        List<PendingPush> pushes = List.of(
+                new PendingPush(1L, "token-1", "제목", "내용", 10L),
+                new PendingPush(2L, "stale-token", "제목", "내용", 10L));
+        given(notificationBatchService.persistPendingNoticeNotifications()).willReturn(pushes);
+        given(fcmSender.sendBatch(pushes)).willReturn(List.of(2L));
 
         notificationService.notifyPendingNotices();
 
-        ArgumentCaptor<List<Notification>> captor = ArgumentCaptor.forClass(List.class);
-        verify(notificationRepository).saveAll(captor.capture());
-        List<Notification> saved = captor.getValue();
-
-        assertThat(saved).hasSize(1);
-        assertThat(saved.get(0).getNotificationType()).isEqualTo(NotificationType.KEYWORD);
-        assertThat(saved.get(0).getMessage()).isEqualTo(notice.getTitle());
-        verify(fcmSender).send(eq(user), anyString(), anyString(), eq(1L));
+        verify(notificationBatchService).clearPushTokens(List.of(2L));
     }
 
     @Test
-    void 키워드알림이_꺼진_유저는_제목이_일치해도_KEYWORD_알림을_안_받는다() {
-        Notice notice = notice(1L, department, scholarshipCategory, "장학금 안내", "내용");
-        User user = user(1L, department, false, false); // keywordNotification = false
-
-        given(noticeRepository.findByNotifiedFalse()).willReturn(List.of(notice));
-        given(userRepository.findByDepartment_University_IdAndAllNotificationTrue(1L)).willReturn(List.of(user));
-
-        notificationService.notifyPendingNotices();
-
-        // 후보가 있으면 키워드는 일괄 조회되지만(배치 효율화), keywordNotification=false라 매칭엔 안 쓰인다
-        ArgumentCaptor<List<Notification>> captor = ArgumentCaptor.forClass(List.class);
-        verify(notificationRepository).saveAll(captor.capture());
-        assertThat(captor.getValue()).isEmpty();
-        verify(fcmSender, never()).send(any(), any(), any(), any());
-    }
-
-    @Test
-    void 카테고리_설정이_켜진_유저는_키워드_없이도_CATEGORY_알림을_받는다() {
-        Notice notice = notice(1L, department, scholarshipCategory, "장학금 안내", "내용");
-        User user = user(1L, department, false, true); // scholarship = true, keywordNotification 무관
-
-        given(noticeRepository.findByNotifiedFalse()).willReturn(List.of(notice));
-        given(userRepository.findByDepartment_University_IdAndAllNotificationTrue(1L)).willReturn(List.of(user));
-
-        notificationService.notifyPendingNotices();
-
-        ArgumentCaptor<List<Notification>> captor = ArgumentCaptor.forClass(List.class);
-        verify(notificationRepository).saveAll(captor.capture());
-        assertThat(captor.getValue()).hasSize(1);
-        assertThat(captor.getValue().get(0).getNotificationType()).isEqualTo(NotificationType.CATEGORY);
-    }
-
-    @Test
-    void 키워드와_카테고리가_동시에_맞으면_알림_두개를_받는다() {
-        Notice notice = notice(1L, department, scholarshipCategory, "장학금 신청 안내", "내용");
-        User user = user(1L, department, true, true);
-        UserKeyword keyword = UserKeyword.builder().id(1L).user(user).keyword("장학금").keywordType("CUSTOM").build();
-
-        given(noticeRepository.findByNotifiedFalse()).willReturn(List.of(notice));
-        given(userRepository.findByDepartment_University_IdAndAllNotificationTrue(1L)).willReturn(List.of(user));
-        given(userKeywordRepository.findAllByUserIn(List.of(user))).willReturn(List.of(keyword));
-
-        notificationService.notifyPendingNotices();
-
-        ArgumentCaptor<List<Notification>> captor = ArgumentCaptor.forClass(List.class);
-        verify(notificationRepository).saveAll(captor.capture());
-        assertThat(captor.getValue()).extracting(Notification::getNotificationType)
-                .containsExactlyInAnyOrder(NotificationType.KEYWORD, NotificationType.CATEGORY);
-        verify(fcmSender, times(2)).send(eq(user), anyString(), anyString(), eq(1L));
-    }
-
-    @Test
-    void 학과공지는_다른학과_유저에게_안간다() {
-        Department otherDept = Department.builder().id(2L).university(university).name("전자공학과").build();
-        Notice notice = notice(1L, department, scholarshipCategory, "컴공 장학금 안내", "내용");
-        User otherDeptUser = user(1L, otherDept, false, true);
-
-        given(noticeRepository.findByNotifiedFalse()).willReturn(List.of(notice));
-        given(userRepository.findByDepartment_University_IdAndAllNotificationTrue(1L)).willReturn(List.of(otherDeptUser));
-
-        notificationService.notifyPendingNotices();
-
-        // 학과 필터링 후 후보가 아예 없으면 saveAll 자체를 호출하지 않고 조기 종료한다
-        verify(notificationRepository, never()).saveAll(any());
-        verify(fcmSender, never()).send(any(), any(), any(), any());
-    }
-
-    @Test
-    void 전체공지는_학과_상관없이_대학_소속이면_다_받는다() {
-        Notice universityWideNotice = notice(1L, null, scholarshipCategory, "전체 장학금 안내", "내용");
-        User anyDeptUser = user(1L, department, false, true);
-
-        given(noticeRepository.findByNotifiedFalse()).willReturn(List.of(universityWideNotice));
-        given(userRepository.findByDepartment_University_IdAndAllNotificationTrue(1L)).willReturn(List.of(anyDeptUser));
-
-        notificationService.notifyPendingNotices();
-
-        ArgumentCaptor<List<Notification>> captor = ArgumentCaptor.forClass(List.class);
-        verify(notificationRepository).saveAll(captor.capture());
-        assertThat(captor.getValue()).hasSize(1);
-    }
-
-    @Test
-    void 마감임박_알림은_Dday와_날짜를_스펙_포맷대로_만든다() {
-        LocalDateTime deadline = LocalDateTime.now().plusDays(3).withHour(12).withMinute(0).withSecond(0).withNano(0);
-        Notice notice = Notice.builder()
-                .id(1L).university(university).category(scholarshipCategory).department(department)
-                .title("수강신청 안내").content("내용").deadlineAt(deadline).notified(true)
-                .build();
-        User user = user(1L, department, false, false);
-        UserNotice userNotice = UserNotice.builder().id(1L).user(user).notice(notice).isScrapped(true).isRead(false).closingNotified(false).build();
-
-        given(userNoticeRepository.findClosingSoonCandidates(any(), any())).willReturn(List.of(userNotice));
+    void 마감임박_알림도_동일하게_배치_저장_후_발송한다() {
+        List<PendingPush> pushes = List.of(new PendingPush(1L, "token-1", "제목", "내용", 10L));
+        given(notificationBatchService.persistClosingSoonNotifications()).willReturn(pushes);
+        given(fcmSender.sendBatch(pushes)).willReturn(List.of());
 
         notificationService.notifyClosingSoonNotices();
 
-        ArgumentCaptor<List<Notification>> captor = ArgumentCaptor.forClass(List.class);
-        verify(notificationRepository).saveAll(captor.capture());
-        Notification saved = captor.getValue().get(0);
-
-        assertThat(saved.getNotificationType()).isEqualTo(NotificationType.CLOSING);
-        assertThat(saved.getTitle()).isEqualTo("📌 곧 마감되는 공지가 있어요");
-        String expectedDate = deadline.toLocalDate().toString();
-        assertThat(saved.getMessage()).isEqualTo("[수강신청 안내] D-3 · " + expectedDate + " 까지");
-        assertThat(userNotice.getClosingNotified()).isTrue();
-        verify(fcmSender).send(eq(user), anyString(), anyString(), eq(1L));
+        verify(notificationBatchService).persistClosingSoonNotifications();
+        verify(fcmSender).sendBatch(pushes);
+        verify(notificationBatchService, never()).clearPushTokens(any());
     }
 }
