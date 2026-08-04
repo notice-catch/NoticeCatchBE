@@ -46,6 +46,10 @@ class UserKeywordServiceTest {
         return User.builder().id(id).email("a@a.com").nickname("유저").build();
     }
 
+    private User withdrawnUser(Long id) {
+        return User.builder().id(id).email("a@a.com").nickname("유저").status("WITHDRAWN").build();
+    }
+
     private UserKeywordUpdateRequest.KeywordItem item(String keyword, String type) {
         return new UserKeywordUpdateRequest.KeywordItem(keyword, type);
     }
@@ -99,6 +103,18 @@ class UserKeywordServiceTest {
                 .isInstanceOf(ProjectException.class)
                 .extracting(e -> ((ProjectException) e).getErrorCode())
                 .isEqualTo(UserErrorCode.USER_NOT_FOUND);
+    }
+
+    @Test
+    void 탈퇴한_유저의_관심키워드_조회시_USER_NOT_FOUND를_던진다() {
+        given(userRepository.findById(1L)).willReturn(Optional.of(withdrawnUser(1L)));
+
+        assertThatThrownBy(() -> userKeywordService.getUserKeywords(1L))
+                .isInstanceOf(ProjectException.class)
+                .extracting(e -> ((ProjectException) e).getErrorCode())
+                .isEqualTo(UserErrorCode.USER_NOT_FOUND);
+
+        verify(userKeywordRepository, never()).findAllByUser(any());
     }
 
     @Test

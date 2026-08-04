@@ -41,6 +41,9 @@ public class UserNoticeService {
     public NoticeScrapResponse scrapNotice(Long userId, Long noticeId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ProjectException(UserErrorCode.USER_NOT_FOUND));
+        if (user.isWithdrawn()) {
+            throw new ProjectException(UserErrorCode.USER_NOT_FOUND);
+        }
 
         Notice notice = noticeRepository.findById(noticeId)
                 .orElseThrow(() -> new ProjectException(NoticeErrorCode.NOTICE_NOT_FOUND));
