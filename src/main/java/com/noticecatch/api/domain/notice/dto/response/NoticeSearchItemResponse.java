@@ -27,18 +27,11 @@ public class NoticeSearchItemResponse {
             return null;
         }
 
-        String sourceName = "대학 본부";
-        if (notice.getDepartment() != null) {
-            sourceName = notice.getDepartment().getName();
-        } else if (notice.getUniversity() != null) {
-            sourceName = notice.getUniversity().getName();
-        }
-
         return NoticeSearchItemResponse.builder()
                 .noticeId(notice.getId())
                 .categoryTag(notice.getCategory() != null ? notice.getCategory().getName() : "기타")
                 .title(notice.getTitle())
-                .source(sourceName)
+                .source(notice.getSourceName())
                 .createdAt(notice.getPostedAt()) // notice.getCreatedAt() -> notice.getPostedAt() 수정
                 .deadlineAt(notice.getDeadlineAt())
                 .build();

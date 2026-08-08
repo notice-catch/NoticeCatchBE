@@ -1,7 +1,9 @@
 package com.noticecatch.api.domain.auth.controller;
 
 import com.noticecatch.api.domain.auth.dto.request.LoginRequest;
+import com.noticecatch.api.domain.auth.dto.request.TokenReissueRequest;
 import com.noticecatch.api.domain.auth.dto.response.LoginResponse;
+import com.noticecatch.api.domain.auth.dto.response.TokenReissueResponse;
 import com.noticecatch.api.domain.auth.service.AuthService;
 import com.noticecatch.api.global.apiPayload.ApiResponse;
 import com.noticecatch.api.global.apiPayload.code.GeneralSuccessCode;
@@ -20,6 +22,12 @@ public class AuthController implements AuthControllerDocs {
     @PostMapping("/login")
     public ApiResponse<LoginResponse> login(@RequestBody LoginRequest request) {
         return ApiResponse.onSuccess(GeneralSuccessCode.OK, authService.socialLogin(request));
+    }
+
+    @Override
+    @PostMapping("/reissue")
+    public ApiResponse<TokenReissueResponse> reissue(@RequestBody TokenReissueRequest request) {
+        return ApiResponse.onSuccess(GeneralSuccessCode.OK, authService.reissueToken(request.getRefreshToken()));
     }
 
     @Override

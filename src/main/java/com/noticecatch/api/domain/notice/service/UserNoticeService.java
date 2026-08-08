@@ -7,8 +7,8 @@ import com.noticecatch.api.domain.notice.exception.NoticeErrorCode;
 import com.noticecatch.api.domain.notice.repository.NoticeRepository;
 import com.noticecatch.api.domain.notice.repository.UserNoticeRepository;
 import com.noticecatch.api.domain.user.entity.User;
+import com.noticecatch.api.domain.user.exception.UserErrorCode;
 import com.noticecatch.api.domain.user.repository.UserRepository;
-import com.noticecatch.api.global.apiPayload.code.GeneralErrorCode;
 import com.noticecatch.api.global.apiPayload.exception.ProjectException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -27,6 +27,12 @@ import java.util.Map;
 @Transactional(readOnly = true)
 public class UserNoticeService {
 
+    private static final Map<String, String> CATEGORY_NAME_TO_COUNT_KEY = Map.of(
+            "장학", "SCHOLARSHIP",
+            "학사", "ACADEMIC",
+            "취업", "EMPLOYMENT"
+    );
+
     private final UserNoticeRepository userNoticeRepository;
     private final NoticeRepository noticeRepository;
     private final UserRepository userRepository;
@@ -34,7 +40,10 @@ public class UserNoticeService {
     @Transactional
     public NoticeScrapResponse scrapNotice(Long userId, Long noticeId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ProjectException(GeneralErrorCode.NOT_FOUND));
+                .orElseThrow(() -> new ProjectException(UserErrorCode.USER_NOT_FOUND));
+        if (user.isWithdrawn()) {
+            throw new ProjectException(UserErrorCode.USER_NOT_FOUND);
+        }
 
         Notice notice = noticeRepository.findById(noticeId)
                 .orElseThrow(() -> new ProjectException(NoticeErrorCode.NOTICE_NOT_FOUND));
@@ -54,11 +63,7 @@ public class UserNoticeService {
         }
         Pageable pageable = PageRequest.of(page, size, sortOrder);
 
-        Map<String, Long> categoryCounts = new HashMap<>();
-        categoryCounts.put("ALL", userNoticeRepository.countByUserIdAndIsScrappedTrue(userId));
-        categoryCounts.put("SCHOLARSHIP", userNoticeRepository.countByUserIdAndCategoryNameAndIsScrappedTrue(userId, "장학"));
-        categoryCounts.put("ACADEMIC", userNoticeRepository.countByUserIdAndCategoryNameAndIsScrappedTrue(userId, "학사"));
-        categoryCounts.put("EMPLOYMENT", userNoticeRepository.countByUserIdAndCategoryNameAndIsScrappedTrue(userId, "취업"));
+        Map<String, Long> categoryCounts = buildCategoryCounts(userId);
 
         Slice<Notice> noticeSlice;
         if (categoryTag == null || categoryTag.isBlank() || "ALL".equalsIgnoreCase(categoryTag)) {
@@ -70,6 +75,21 @@ public class UserNoticeService {
         Slice<NoticeSearchItemResponse> responseSlice = noticeSlice.map(NoticeSearchItemResponse::from);
 
         return NoticeScrapListResponse.of(categoryCounts, responseSlice);
+    }
+
+    // 카테고리별 스크랩 개수를 쿼리 1번(GROUP BY)으로 집계
+    private Map<String, Long> buildCategoryCounts(Long userId) {
+        Map<String, Long> categoryCounts = new HashMap<>();
+        long total = 0;
+        for (UserNoticeRepository.CategoryCount row : userNoticeRepository.countGroupedByCategoryForUser(userId)) {
+            String key = CATEGORY_NAME_TO_COUNT_KEY.get(row.getCategory());
+            if (key != null) {
+                categoryCounts.put(key, row.getCount());
+            }
+            total += row.getCount();
+        }
+        categoryCounts.put("ALL", total);
+        return categoryCounts;
     }
 
     public CalendarDatesResponse getCalendarDates(Long userId, String year, String month) {

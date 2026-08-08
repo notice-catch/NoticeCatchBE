@@ -63,7 +63,29 @@ docker compose -f infra/docker-compose-local.yml up -d
 ```
 
 
-**Step 3. 스프링 부트 애플리케이션 실행하기**
+**Step 3. 환경변수(.env) 설정하기**
+
+프로젝트 루트(`NoticeCatchBE/`)에 `.env` 파일을 만들고 아래 값을 채워주세요. Google/Kakao 값은 팀 채널에서 공유받은 값을 그대로 사용하면 됩니다.
+
+```env
+# 필수 — 없으면 부팅 자체가 실패합니다
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+GOOGLE_REDIRECT_URI=http://localhost:8080/login/oauth2/code/google
+KAKAO_CLIENT_ID=
+KAKAO_CLIENT_SECRET=
+KAKAO_REDIRECT_URI=http://localhost:8080/login/oauth2/code/kakao
+
+# 선택 — 비워둬도 부팅은 되고 해당 기능만 비활성화됩니다
+GEMINI_API_KEY=
+FIREBASE_CREDENTIALS_BASE64=
+```
+
+`.env`는 `.gitignore`에 포함되어 있어 커밋되지 않습니다. `FIREBASE_CREDENTIALS_BASE64`는 Firebase 콘솔의 서비스 계정 키(JSON)를 base64 한 줄로 인코딩한 값이며, 비워두면 FCM 푸시 발송만 비활성화되고 나머지 기능은 정상 동작합니다.
+
+<br>
+
+**Step 4. 스프링 부트 애플리케이션 실행하기**
 
 인텔리제이(IntelliJ IDEA)로 프로젝트를 열고 NoticeCatchApplication.java 의 재생(▶️) 버튼을 누르거나, 터미널에서 아래 명령어를 입력합니다.
 

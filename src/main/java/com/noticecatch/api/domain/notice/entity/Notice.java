@@ -4,6 +4,7 @@ import com.noticecatch.api.domain.department.entity.Department;
 import com.noticecatch.api.domain.university.entity.University;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.ColumnDefault;
 import java.time.LocalDateTime;
 
 @Entity
@@ -51,6 +52,11 @@ public class Notice {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    // 크롤러가 DB에 직접 insert하므로 DB 컬럼 기본값(false)에 의존 — 키워드 알림 배치가 이 값으로 미처리 공지를 찾음
+    @Column(name = "notified")
+    @ColumnDefault("false")
+    private Boolean notified;
+
     @OneToOne(mappedBy = "notice", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private NoticeSummary noticeSummary;
 
@@ -58,6 +64,11 @@ public class Notice {
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
         if (this.hasAttachments == null) this.hasAttachments = false; // 기본값 false 세팅
+        if (this.notified == null) this.notified = false;
+    }
+
+    public void markNotified() {
+        this.notified = true;
     }
 
     public void setNoticeSummary(NoticeSummary noticeSummary) {
@@ -70,5 +81,16 @@ public class Notice {
     public boolean isExpired() {
         if (this.deadlineAt == null) return false;
         return LocalDateTime.now().isAfter(this.deadlineAt);
+    }
+
+    // 출처 표시명 — 학과 공지면 학과명, 아니면 대학 전체 공지로 간주해 대학명, 둘 다 없으면 기본값
+    public String getSourceName() {
+        if (this.department != null) {
+            return this.department.getName();
+        }
+        if (this.university != null) {
+            return this.university.getName();
+        }
+        return "대학 본부";
     }
 }

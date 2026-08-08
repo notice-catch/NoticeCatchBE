@@ -31,6 +31,10 @@ public class UserNotice {
     @Column(name = "is_read")
     private Boolean isRead;
 
+    // 마감임박(D-day) 알림을 이미 보냈는지 — 스크랩한 유저별로 한 번만 발송하기 위한 플래그
+    @Column(name = "closing_notified")
+    private Boolean closingNotified;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
@@ -39,6 +43,7 @@ public class UserNotice {
         this.createdAt = LocalDateTime.now();
         if (this.isScrapped == null) this.isScrapped = false;
         if (this.isRead == null) this.isRead = false;
+        if (this.closingNotified == null) this.closingNotified = false;
     }
 
     public static UserNotice create(User user, Notice notice) {
@@ -54,7 +59,7 @@ public class UserNotice {
         this.isScrapped = !this.isScrapped;
     }
 
-    public void markAsRead() {
-        this.isRead = true;
+    public void markClosingNotified() {
+        this.closingNotified = true;
     }
 }
