@@ -18,7 +18,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -79,7 +79,12 @@ public class UserNoticeService {
 
     // 카테고리별 스크랩 개수를 쿼리 1번(GROUP BY)으로 집계
     private Map<String, Long> buildCategoryCounts(Long userId) {
-        Map<String, Long> categoryCounts = new HashMap<>();
+        Map<String, Long> categoryCounts = new LinkedHashMap<>();
+        categoryCounts.put("ALL", 0L);
+        for (String key : CATEGORY_NAME_TO_COUNT_KEY.values()) {
+            categoryCounts.put(key, 0L);
+        }
+
         long total = 0;
         for (UserNoticeRepository.CategoryCount row : userNoticeRepository.countGroupedByCategoryForUser(userId)) {
             String key = CATEGORY_NAME_TO_COUNT_KEY.get(row.getCategory());
