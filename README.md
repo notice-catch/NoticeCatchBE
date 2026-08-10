@@ -106,12 +106,11 @@ chmod +x gradlew
 
 <br>
 
-### 🔗 3. 연결 정보 및 API 명세서 (Endpoints)
+### 🔗 3. 연결 정보 (Endpoints)
 
 서버가 정상적으로 구동되면 브라우저를 통해 아래 주소들에 접근할 수 있습니다.
 
 * **Swagger API 자동 명세서:** [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
-* **API 명세서 (요청/응답/에러코드 정리):** [docs/API_SPEC.md](./docs/API_SPEC.md)
 
 **로컬 데이터베이스 접속 정보 (MariaDB):**
 * **Host:** `localhost`
@@ -128,4 +127,4 @@ chmod +x gradlew
 
 🤝 **프로젝트의 일관성을 위한 [공지캐치 SpringBoot 개발 컨벤션 규칙 보러가기](./docs/CONVENTION.md)**
 
-📑 **엔드포인트별 요청/응답/에러코드 상세는 [API 명세서 (docs/API_SPEC.md)](./docs/API_SPEC.md) 참고**
+📑 **엔드포인트별 요청/응답/에러코드 상세는 [API 명세서 보러가기](./docs/API_SPEC.md)**
