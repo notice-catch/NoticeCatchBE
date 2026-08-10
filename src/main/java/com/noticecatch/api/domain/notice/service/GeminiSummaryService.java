@@ -3,7 +3,6 @@ package com.noticecatch.api.domain.notice.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.noticecatch.api.domain.notice.dto.response.NoticeDetailResponse.AiSummaryDto;
-import com.noticecatch.api.domain.notice.exception.GeminiSummaryException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -76,7 +75,7 @@ public class GeminiSummaryService {
         } catch (Exception e) {
             log.error("Gemini AI 요약 생성 중 오류 발생: {}", e.getMessage());
             // 실패를 더미값으로 감추면 배치가 "성공"으로 착각해 저장해버리므로, 예외를 던져 재시도 대상으로 남긴다
-            throw new GeminiSummaryException("Gemini AI 요약 생성에 실패했습니다.", e);
+            throw new RuntimeException("Gemini AI 요약 생성에 실패했습니다.", e);
         }
     }
 }

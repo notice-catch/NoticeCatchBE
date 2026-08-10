@@ -2,7 +2,6 @@ package com.noticecatch.api.domain.notice.service;
 
 import com.noticecatch.api.domain.notice.dto.response.NoticeDetailResponse.AiSummaryDto;
 import com.noticecatch.api.domain.notice.entity.Notice;
-import com.noticecatch.api.domain.notice.exception.GeminiSummaryException;
 import com.noticecatch.api.domain.notice.repository.NoticeRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -77,7 +76,7 @@ class NoticeSummaryBatchServiceTest {
         given(noticeRepository.findByNoticeSummaryIsNull(any(PageRequest.class)))
                 .willReturn(List.of(failing, succeeding));
         given(geminiSummaryService.generateSummary("실패 공지", "본문1"))
-                .willThrow(new GeminiSummaryException("Gemini 호출 실패", new RuntimeException("timeout")));
+                .willThrow(new RuntimeException("Gemini 호출 실패", new RuntimeException("timeout")));
         given(geminiSummaryService.generateSummary("성공 공지", "본문2")).willReturn(summary());
 
         assertThatCode(() -> noticeSummaryBatchService.summarizePendingNotices()).doesNotThrowAnyException();
