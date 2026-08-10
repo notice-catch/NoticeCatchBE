@@ -66,13 +66,18 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_KEY }}
           script: |
+            set -e
             cd /home/ubuntu/infra
-            
+
             # 기존 구동 중인 컨테이너 제거
             sudo docker compose -f docker-compose-prod.yml down --remove-orphans || true
-            
+
             # 새 이미지 빌드 및 백그라운드 재실행
             sudo docker compose -f docker-compose-prod.yml up -d --build
-            
+
+            # 컨테이너가 실제로 떠서 유지되는지 확인 (빌드는 성공했지만 기동 직후 죽는 경우 배포 실패로 처리)
+            sleep 10
+            sudo docker inspect -f '{{.State.Running}}' catch-api-prod | grep -q true
+
             # 미사용 이미지 정리
             sudo docker image prune -f
