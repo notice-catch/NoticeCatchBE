@@ -30,7 +30,7 @@
 
 ### 🔔 4. 스마트 알림 센터 및 푸시 알림
 * **푸시 토큰 관리:** 알림을 정상적으로 수신할 수 있도록 사용자 기기의 푸시 토큰(FCM)을 안전하게 등록합니다.
-* **체계적인 알림함:** 도착한 알림들을 종류별(마감 임박 공지 `CLOSING`, 키워드 매칭 공지 `KEYWORD`)로 분류하고, 읽지 않은 알림은 빨간 점(Badge)으로 강조하여 보여줍니다.
+* **체계적인 알림함:** 도착한 알림들을 종류별(마감 임박 공지 `CLOSING`, 키워드 매칭 공지 `KEYWORD`, 관심 카테고리 공지 `CATEGORY`)로 분류하고, 읽지 않은 알림은 빨간 점(Badge)으로 강조하여 보여줍니다.
 * **알림 연동 이동:** 알림함을 통해 들어온 메시지를 클릭하면 해당 공지의 상세 화면으로 즉시 이동합니다.
 
 ### ⚙️ 5. 마이페이지 및 맞춤형 알림 설정
@@ -57,10 +57,11 @@ cd notice-catch
 ```
 
 
-**Step 2. 로컬 개발용 마리아DB(MariaDB) 컨테이너 구동하기**
+**Step 2. 로컬 개발용 마리아DB(MariaDB) + Redis 컨테이너 구동하기**
 ```bash
 docker compose -f infra/docker-compose-local.yml up -d
 ```
+위 명령 한 번으로 MariaDB와 Redis(로그인 리프레시 토큰 저장/로그아웃 블랙리스트 처리에 사용) 컨테이너가 함께 뜹니다.
 
 
 **Step 3. 환경변수(.env) 설정하기**
@@ -105,7 +106,7 @@ chmod +x gradlew
 
 <br>
 
-### 🔗 3. 연결 정보 및 API 명세서 (Endpoints)
+### 🔗 3. 연결 정보 (Endpoints)
 
 서버가 정상적으로 구동되면 브라우저를 통해 아래 주소들에 접근할 수 있습니다.
 
@@ -117,6 +118,13 @@ chmod +x gradlew
 * **Database:** `notice_catch`
 * **Username / Password:** `catch_user` / `catch_password`
 
+**로컬 Redis 접속 정보:**
+* **Host:** `localhost`
+* **Port:** `6379`
+* **인증:** 없음 (비밀번호 미설정)
+
 <br>
 
 🤝 **프로젝트의 일관성을 위한 [공지캐치 SpringBoot 개발 컨벤션 규칙 보러가기](./docs/CONVENTION.md)**
+
+📑 **엔드포인트별 요청/응답/에러코드 상세는 [API 명세서 보러가기](./docs/API_SPEC.md)**
