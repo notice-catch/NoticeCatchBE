@@ -1,5 +1,6 @@
 package com.noticecatch.api.domain.user.dto.response;
 
+import com.noticecatch.api.domain.department.entity.Department;
 import com.noticecatch.api.domain.user.entity.User;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -16,10 +17,12 @@ public class MyPageProfileResponse {
     private final long readCount;
 
     public static MyPageProfileResponse of(User user, long scrapCount, long keywordCount, long readCount) {
+        // 온보딩 중 학과를 아직 선택하지 않은 유저는 department가 null일 수 있음
+        Department department = user.getDepartment();
         return new MyPageProfileResponse(
                 user.getNickname(),
-                user.getDepartment().getUniversity().getName(),
-                user.getDepartment().getName(),
+                department != null ? department.getUniversity().getName() : null,
+                department != null ? department.getName() : null,
                 user.getGrade(),
                 scrapCount,
                 keywordCount,
