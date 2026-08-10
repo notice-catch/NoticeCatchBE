@@ -13,8 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-// 크롤러가 DB에 직접 insert하는 신규 공지 중 AI 요약이 아직 없는 건을 5분마다 스캔해 Gemini 요약을 생성·저장한다.
-// 한 번에 너무 많은 외부 API 호출로 배치가 오래 붙잡히지 않도록 주기당 처리 건수를 제한한다.
+// 크롤러가 DB에 직접 insert하는 신규 공지 중 AI 요약이 아직 없는 건을 30초마다 스캔해 Gemini 요약을 생성·저장한다.
+// 주기(30초)당 처리 건수(BATCH_SIZE)를 곱한 값이 분당 15회를 넘지 않게 제한한다.
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -26,7 +26,7 @@ public class NoticeSummaryBatchService {
     private final GeminiSummaryService geminiSummaryService;
 
     @Transactional
-    @Scheduled(fixedDelay = 5 * 60 * 1000)
+    @Scheduled(fixedDelay = 30 * 1000)
     public void summarizePendingNotices() {
         List<Notice> pendingNotices = noticeRepository.findByNoticeSummaryIsNull(PageRequest.of(0, BATCH_SIZE));
 
