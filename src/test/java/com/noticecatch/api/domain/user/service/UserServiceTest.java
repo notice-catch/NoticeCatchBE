@@ -132,6 +132,21 @@ class UserServiceTest {
     }
 
     @Test
+    void 마이페이지_조회시_학과를_아직_선택하지_않았으면_대학교와_학과명은_null이다() {
+        User user = activeUser(1L);
+
+        given(userRepository.findById(1L)).willReturn(Optional.of(user));
+        given(userNoticeRepository.countByUserAndIsScrapped(user, true)).willReturn(0L);
+        given(userNoticeRepository.countByUserAndIsRead(user, true)).willReturn(0L);
+        given(userKeywordRepository.countByUser(user)).willReturn(0L);
+
+        MyPageProfileResponse response = userService.getMyPage(1L);
+
+        assertThat(response.getUniversityName()).isNull();
+        assertThat(response.getDepartmentName()).isNull();
+    }
+
+    @Test
     void 마이페이지_조회시_존재하지_않는_유저면_USER_NOT_FOUND를_던진다() {
         given(userRepository.findById(999L)).willReturn(Optional.empty());
 
