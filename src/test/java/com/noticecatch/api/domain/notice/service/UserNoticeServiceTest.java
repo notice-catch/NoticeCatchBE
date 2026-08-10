@@ -160,6 +160,21 @@ class UserNoticeServiceTest {
     }
 
     @Test
+    void 스크랩한_공지가_하나도_없어도_카테고리별_개수는_0으로_모두_채워진다() {
+        given(userNoticeRepository.countGroupedByCategoryForUser(1L)).willReturn(List.of());
+        given(userNoticeRepository.findScrappedNoticesByUserId(eq(1L), any(PageRequest.class)))
+                .willReturn(new SliceImpl<>(List.of()));
+
+        NoticeScrapListResponse response = userNoticeService.getScrapNotices(1L, null, "latest", 0, 10);
+
+        assertThat(response.getCategoryCounts())
+                .containsEntry("ALL", 0L)
+                .containsEntry("SCHOLARSHIP", 0L)
+                .containsEntry("ACADEMIC", 0L)
+                .containsEntry("EMPLOYMENT", 0L);
+    }
+
+    @Test
     void 카테고리를_지정하면_해당_카테고리_스크랩목록만_조회한다() {
         given(userNoticeRepository.countGroupedByCategoryForUser(1L)).willReturn(List.of());
         Slice<Notice> slice = new SliceImpl<>(List.of(notice(11L)));
