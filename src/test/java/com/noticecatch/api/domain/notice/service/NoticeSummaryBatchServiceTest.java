@@ -3,6 +3,7 @@ package com.noticecatch.api.domain.notice.service;
 import com.noticecatch.api.domain.notice.dto.response.NoticeDetailResponse.AiSummaryDto;
 import com.noticecatch.api.domain.notice.entity.Notice;
 import com.noticecatch.api.domain.notice.repository.NoticeRepository;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,12 +26,14 @@ class NoticeSummaryBatchServiceTest {
     private NoticeRepository noticeRepository;
     @Mock
     private GeminiSummaryService geminiSummaryService;
+    @Mock
+    private EntityManager entityManager;
 
     private NoticeSummaryBatchService noticeSummaryBatchService;
 
     @BeforeEach
     void setUp() {
-        noticeSummaryBatchService = new NoticeSummaryBatchService(noticeRepository, geminiSummaryService);
+        noticeSummaryBatchService = new NoticeSummaryBatchService(noticeRepository, geminiSummaryService, entityManager);
     }
 
     private Notice notice(Long id, String title, String content) {
