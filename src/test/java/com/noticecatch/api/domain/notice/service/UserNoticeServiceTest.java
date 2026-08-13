@@ -86,13 +86,30 @@ class UserNoticeServiceTest {
         given(userRepository.findById(1L)).willReturn(Optional.of(user));
         given(noticeRepository.findById(10L)).willReturn(Optional.of(notice));
         given(userNoticeRepository.findByUserIdAndNoticeId(1L, 10L)).willReturn(Optional.empty());
-        given(userNoticeRepository.save(any(UserNotice.class))).willAnswer(invocation -> invocation.getArgument(0));
+        given(userNoticeRepository.saveAndFlush(any(UserNotice.class))).willAnswer(invocation -> invocation.getArgument(0));
 
         NoticeScrapResponse response = userNoticeService.scrapNotice(1L, 10L);
 
         assertThat(response.getNoticeId()).isEqualTo(10L);
         assertThat(response.getIsScraped()).isTrue();
-        verify(userNoticeRepository).save(any(UserNotice.class));
+        verify(userNoticeRepository).saveAndFlush(any(UserNotice.class));
+    }
+
+    @Test
+    void 동시_스크랩_요청으로_유니크_제약_위반시_먼저_저장된_행을_재조회해_이어서_처리한다() {
+        User user = user(1L);
+        Notice notice = notice(10L);
+        UserNotice savedByOtherRequest = UserNotice.builder().user(user).notice(notice).isScrapped(false).build();
+        given(userRepository.findById(1L)).willReturn(Optional.of(user));
+        given(noticeRepository.findById(10L)).willReturn(Optional.of(notice));
+        given(userNoticeRepository.findByUserIdAndNoticeId(1L, 10L))
+                .willReturn(Optional.empty(), Optional.of(savedByOtherRequest));
+        given(userNoticeRepository.saveAndFlush(any(UserNotice.class)))
+                .willThrow(new org.springframework.dao.DataIntegrityViolationException("duplicate"));
+
+        NoticeScrapResponse response = userNoticeService.scrapNotice(1L, 10L);
+
+        assertThat(response.getIsScraped()).isTrue();
     }
 
     @Test
@@ -107,7 +124,7 @@ class UserNoticeServiceTest {
         NoticeScrapResponse response = userNoticeService.scrapNotice(1L, 10L);
 
         assertThat(response.getIsScraped()).isFalse();
-        verify(userNoticeRepository, never()).save(any());
+        verify(userNoticeRepository, never()).saveAndFlush(any());
     }
 
     @Test

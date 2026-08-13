@@ -54,7 +54,7 @@ public class NoticeService {
 
     public NoticeDetailResponse getNoticeDetail(Long userId, Long noticeId) {
         // 공지 존재 여부 검증 및 조회
-        Notice notice = noticeRepository.findById(noticeId)
+        Notice notice = noticeRepository.findDetailById(noticeId)
                 .orElseThrow(() -> new ProjectException(NoticeErrorCode.NOTICE_NOT_FOUND));
 
         // 스크랩 여부 확인
