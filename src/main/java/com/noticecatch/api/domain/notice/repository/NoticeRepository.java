@@ -8,8 +8,19 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface NoticeRepository extends JpaRepository<Notice, Long> {
+
+    // 상세 응답도 category/university/department를 읽으므로(NoticeDetailResponse.of) fetch join.
+    // 전부 LEFT JOIN인 이유: findById()의 LAZY 프록시는 FK가 가리키는 row가 없으면(예: 크롤러가 잘못 채운 department_id)
+    // 초기화 시점에 EntityNotFoundException으로 500을 유발하는데, LEFT JOIN FETCH는 대신 해당 연관관계를 null로 채운다.
+    @Query("SELECT n FROM Notice n " +
+            "LEFT JOIN FETCH n.category " +
+            "LEFT JOIN FETCH n.university " +
+            "LEFT JOIN FETCH n.department " +
+            "WHERE n.id = :noticeId")
+    Optional<Notice> findDetailById(@Param("noticeId") Long noticeId);
 
     // 목록 응답이 category/university/department를 매번 읽으므로(NoticeSearchItemResponse.from) 한 번에 fetch join
     @Query("SELECT n FROM Notice n JOIN FETCH n.category JOIN FETCH n.university LEFT JOIN FETCH n.department " +
