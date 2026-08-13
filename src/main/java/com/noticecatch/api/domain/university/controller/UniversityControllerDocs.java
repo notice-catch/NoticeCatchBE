@@ -11,7 +11,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.PathVariable;
-import java.util.Map;
 
 @Tag(name = "🏫 University", description = "대학 정보 제공 및 선택 API")
 public interface UniversityControllerDocs {

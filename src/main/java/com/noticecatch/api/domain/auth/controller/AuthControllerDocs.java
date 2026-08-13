@@ -14,8 +14,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 
-import java.util.Map;
-
 @Tag(name = "🔐 Auth", description = "인증 및 로그인 관련 API")
 public interface AuthControllerDocs {
     @Operation(summary = "회원가입/로그인", description = "소셜 액세스 토큰으로 로그인 및 회원가입을 진행합니다.")
