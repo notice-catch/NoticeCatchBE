@@ -39,15 +39,18 @@ public class UserNoticeService {
 
     @Transactional
     public NoticeScrapResponse scrapNotice(Long userId, Long noticeId) {
+        // 유저 존재 및 탈퇴 여부 검증
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ProjectException(UserErrorCode.USER_NOT_FOUND));
         if (user.isWithdrawn()) {
             throw new ProjectException(UserErrorCode.USER_NOT_FOUND);
         }
 
+        // 공지 존재 여부 검증
         Notice notice = noticeRepository.findById(noticeId)
                 .orElseThrow(() -> new ProjectException(NoticeErrorCode.NOTICE_NOT_FOUND));
 
+        // 스크랩 레코드 조회, 없으면 최초 생성
         UserNotice userNotice = userNoticeRepository.findByUserIdAndNoticeId(userId, noticeId)
                 .orElseGet(() -> userNoticeRepository.save(UserNotice.create(user, notice)));
 
@@ -57,14 +60,17 @@ public class UserNoticeService {
     }
 
     public NoticeScrapListResponse getScrapNotices(Long userId, String categoryTag, String sort, int page, int size) {
+        // 정렬 조건 설정
         Sort sortOrder = Sort.by(Sort.Direction.DESC, "notice.postedAt");
         if ("deadline".equalsIgnoreCase(sort)) {
             sortOrder = Sort.by(Sort.Order.asc("notice.deadlineAt").nullsLast());
         }
         Pageable pageable = PageRequest.of(page, size, sortOrder);
 
+        // 카테고리별 스크랩 개수 집계
         Map<String, Long> categoryCounts = buildCategoryCounts(userId);
 
+        // 카테고리 필터 여부에 따라 스크랩 목록 조회
         Slice<Notice> noticeSlice;
         if (categoryTag == null || categoryTag.isBlank() || "ALL".equalsIgnoreCase(categoryTag)) {
             noticeSlice = userNoticeRepository.findScrappedNoticesByUserId(userId, pageable);
@@ -72,6 +78,7 @@ public class UserNoticeService {
             noticeSlice = userNoticeRepository.findScrappedNoticesByUserIdAndCategoryName(userId, categoryTag, pageable);
         }
 
+        // DTO 변환
         Slice<NoticeSearchItemResponse> responseSlice = noticeSlice.map(NoticeSearchItemResponse::from);
 
         return NoticeScrapListResponse.of(categoryCounts, responseSlice);

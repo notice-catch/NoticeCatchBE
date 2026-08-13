@@ -52,4 +52,8 @@ public interface NoticeRepository extends JpaRepository<Notice, Long> {
             "LEFT JOIN FETCH n.department " +
             "WHERE n.notified = false")
     List<Notice> findByNotifiedFalse();
+
+    // AI 요약 배치 대상 — 아직 요약이 생성되지 않은 공지를 오래된 순으로 한 번에 BATCH_SIZE만큼만 가져온다
+    @Query("SELECT n FROM Notice n WHERE n.noticeSummary IS NULL ORDER BY n.id ASC")
+    List<Notice> findByNoticeSummaryIsNull(Pageable pageable);
 }

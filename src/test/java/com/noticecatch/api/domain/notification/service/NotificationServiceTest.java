@@ -71,10 +71,30 @@ class NotificationServiceTest {
     }
 
     @Test
+    void 디바이스토큰이_너무_짧으면_PUSH_TOKEN_INVALID를_던진다() {
+        assertThatThrownBy(() -> notificationService.registerDeviceToken(1L, deviceTokenRequest("short-token")))
+                .isInstanceOf(ProjectException.class)
+                .extracting(e -> ((ProjectException) e).getErrorCode())
+                .isEqualTo(NotificationErrorCode.PUSH_TOKEN_INVALID);
+
+        verify(userRepository, never()).findById(any());
+    }
+
+    @Test
+    void 디바이스토큰에_허용되지_않은_문자가_있으면_PUSH_TOKEN_INVALID를_던진다() {
+        assertThatThrownBy(() -> notificationService.registerDeviceToken(1L, deviceTokenRequest("invalid token with spaces!!")))
+                .isInstanceOf(ProjectException.class)
+                .extracting(e -> ((ProjectException) e).getErrorCode())
+                .isEqualTo(NotificationErrorCode.PUSH_TOKEN_INVALID);
+
+        verify(userRepository, never()).findById(any());
+    }
+
+    @Test
     void 존재하지_않는_유저면_디바이스토큰_등록시_USER_NOT_FOUND를_던진다() {
         given(userRepository.findById(999L)).willReturn(Optional.empty());
 
-        assertThatThrownBy(() -> notificationService.registerDeviceToken(999L, deviceTokenRequest("token")))
+        assertThatThrownBy(() -> notificationService.registerDeviceToken(999L, deviceTokenRequest("fcm_token_string_asdf1234567890")))
                 .isInstanceOf(ProjectException.class)
                 .extracting(e -> ((ProjectException) e).getErrorCode())
                 .isEqualTo(UserErrorCode.USER_NOT_FOUND);
@@ -85,9 +105,9 @@ class NotificationServiceTest {
         User user = user(1L);
         given(userRepository.findById(1L)).willReturn(Optional.of(user));
 
-        notificationService.registerDeviceToken(1L, deviceTokenRequest("new-token"));
+        notificationService.registerDeviceToken(1L, deviceTokenRequest("fcm_token_string_asdf1234567890"));
 
-        assertThat(user.getPushToken()).isEqualTo("new-token");
+        assertThat(user.getPushToken()).isEqualTo("fcm_token_string_asdf1234567890");
     }
 
     @Test

@@ -19,7 +19,7 @@ public class GeminiSummaryService {
     @Value("${gemini.api.key:}")
     private String apiKey;
 
-    @Value("${gemini.api.url:https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent}")
+    @Value("${gemini.api.url:https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent}")
     private String geminiUrl;
 
     private final WebClient webClient = WebClient.builder().build();
@@ -74,11 +74,8 @@ public class GeminiSummaryService {
 
         } catch (Exception e) {
             log.error("Gemini AI 요약 생성 중 오류 발생: {}", e.getMessage());
-            return AiSummaryDto.builder()
-                    .eligibility("해당 사항 없음")
-                    .benefit("해당 사항 없음")
-                    .deadline("상세 공지 참조")
-                    .build();
+            // 실패를 더미값으로 감추면 배치가 "성공"으로 착각해 저장해버리므로, 예외를 던져 재시도 대상으로 남긴다
+            throw new RuntimeException("Gemini AI 요약 생성에 실패했습니다.", e);
         }
     }
 }
