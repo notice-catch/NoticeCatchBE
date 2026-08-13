@@ -19,7 +19,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
-import java.util.Map;
 
 @Tag(name = "⚙️ User & MyPage", description = "온보딩 세팅, 개인 프로필 관리 및 알림 제어 API")
 public interface UserControllerDocs {

@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
@@ -28,9 +29,13 @@ public class NotificationService {
     private final NotificationBatchService notificationBatchService;
     private final FcmSender fcmSender;
 
+    // FCM 등록 토큰은 base64url 계열 문자만 사용하며 통상 140자 이상 — 지나치게 짧거나 허용되지 않은 문자가 섞인 값을 형식 오류로 걸러낸다
+    private static final Pattern PUSH_TOKEN_PATTERN = Pattern.compile("^[A-Za-z0-9_\\-:.]{20,4096}$");
+
     @Transactional
     public void registerDeviceToken(Long userId, DeviceTokenRequest request) {
-        if (request == null || request.getPushToken() == null || request.getPushToken().isBlank()) {
+        if (request == null || request.getPushToken() == null || request.getPushToken().isBlank()
+                || !PUSH_TOKEN_PATTERN.matcher(request.getPushToken()).matches()) {
             throw new ProjectException(NotificationErrorCode.PUSH_TOKEN_INVALID);
         }
 

@@ -3,7 +3,6 @@ package com.noticecatch.api.global.apiPayload.code;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.client.HttpClientErrorException;
 
 @Getter
 @RequiredArgsConstructor

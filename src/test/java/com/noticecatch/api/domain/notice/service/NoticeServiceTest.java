@@ -137,7 +137,7 @@ class NoticeServiceTest {
     @Test
     void 공지_상세조회시_로그인하지_않았으면_스크랩여부는_false다() {
         Notice notice = notice(1L, university(1L), Category.builder().id(1L).name("장학").build());
-        given(noticeRepository.findById(1L)).willReturn(Optional.of(notice));
+        given(noticeRepository.findDetailById(1L)).willReturn(Optional.of(notice));
 
         NoticeDetailResponse response = noticeService.getNoticeDetail(null, 1L);
 
@@ -149,7 +149,7 @@ class NoticeServiceTest {
     void 공지_상세조회시_스크랩한_유저면_isScrapped_true다() {
         Notice notice = notice(1L, university(1L), Category.builder().id(1L).name("장학").build());
         UserNotice userNotice = UserNotice.builder().isScrapped(true).build();
-        given(noticeRepository.findById(1L)).willReturn(Optional.of(notice));
+        given(noticeRepository.findDetailById(1L)).willReturn(Optional.of(notice));
         given(userNoticeRepository.findByUserIdAndNoticeId(1L, 1L)).willReturn(Optional.of(userNotice));
 
         NoticeDetailResponse response = noticeService.getNoticeDetail(1L, 1L);
@@ -159,7 +159,7 @@ class NoticeServiceTest {
 
     @Test
     void 존재하지_않는_공지_상세조회시_NOTICE_NOT_FOUND를_던진다() {
-        given(noticeRepository.findById(999L)).willReturn(Optional.empty());
+        given(noticeRepository.findDetailById(999L)).willReturn(Optional.empty());
 
         assertThatThrownBy(() -> noticeService.getNoticeDetail(1L, 999L))
                 .isInstanceOf(ProjectException.class)

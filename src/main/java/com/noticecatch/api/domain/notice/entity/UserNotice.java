@@ -6,7 +6,8 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "user_notices")
+@Table(name = "user_notices",
+        uniqueConstraints = @UniqueConstraint(name = "uk_user_notices_user_id_notice_id", columnNames = {"user_id", "notice_id"}))
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor

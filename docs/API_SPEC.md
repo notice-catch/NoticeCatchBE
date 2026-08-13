@@ -923,6 +923,7 @@
       "content": "안녕하세요. 컴퓨터공학과 사무실입니다. 수강신청 일정을 다음과 같이 안내하오니...",
       "hasFiles": true,
       "originalUrl": "https://www.university.ac.kr/notice/12345",
+      "isScrapped": false,
       "aiSummary": {
         "eligibility": "직전 학기 12학점 이상 이수 및 이수 평점 3.5 이상인 자",
         "benefit": "등록금 전액 면제 및 도서비 분기별 20만 원 지급",

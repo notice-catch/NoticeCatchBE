@@ -53,9 +53,11 @@ public class NoticeService {
     }
 
     public NoticeDetailResponse getNoticeDetail(Long userId, Long noticeId) {
-        Notice notice = noticeRepository.findById(noticeId)
+        // 공지 존재 여부 검증 및 조회
+        Notice notice = noticeRepository.findDetailById(noticeId)
                 .orElseThrow(() -> new ProjectException(NoticeErrorCode.NOTICE_NOT_FOUND));
 
+        // 스크랩 여부 확인
         boolean isScrapped = false;
         if (userId != null) {
             isScrapped = userNoticeRepository.findByUserIdAndNoticeId(userId, noticeId)
@@ -69,10 +71,12 @@ public class NoticeService {
     public NoticeSearchListResponse searchNotices(Long userId, String searchWord, String sort, int page, int size) {
         Long universityId = getUserUniversityId(userId);
 
+        // 검색어 길이 검증
         if (searchWord == null || searchWord.trim().length() < 2) {
             throw new ProjectException(NoticeErrorCode.SEARCH_KEYWORD_TOO_SHORT);
         }
 
+        // 정렬 조건 설정
         String trimmedKeyword = searchWord.trim();
         Sort sortOrder = Sort.by(Sort.Direction.DESC, "postedAt");
 
@@ -82,8 +86,10 @@ public class NoticeService {
 
         Pageable pageable = PageRequest.of(page, size, sortOrder);
 
+        // 검색 조회
         Slice<Notice> noticeSlice = noticeRepository.searchByKeywordAndUniversityId(universityId, trimmedKeyword, pageable);
 
+        // DTO 변환
         Slice<NoticeSearchItemResponse> responseSlice = noticeSlice.map(NoticeSearchItemResponse::from);
 
         return NoticeSearchListResponse.of(responseSlice);
@@ -111,9 +117,11 @@ public class NoticeService {
     }
 
     private Long getUserUniversityId(Long userId) {
+        // 유저 존재 여부 검증
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ProjectException(UserErrorCode.USER_NOT_FOUND));
 
+        // 대학교 등록 여부 검증
         if (user.getDepartment() == null || user.getDepartment().getUniversity() == null) {
             throw new ProjectException(UniversityErrorCode.UNIVERSITY_NOT_FOUND);
         }

@@ -1,7 +1,6 @@
 package com.noticecatch.api.global.config;
 
 import com.noticecatch.api.global.resolver.CurrentUserId;
-import com.noticecatch.api.global.security.UserAuthentication;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
