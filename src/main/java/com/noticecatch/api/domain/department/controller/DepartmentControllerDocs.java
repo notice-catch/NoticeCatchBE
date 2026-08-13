@@ -12,7 +12,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
-import java.util.Map;
 
 @Tag(name = "🎓 Department", description = "학과 조회 및 검색 API")
 public interface DepartmentControllerDocs {

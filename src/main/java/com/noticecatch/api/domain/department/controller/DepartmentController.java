@@ -7,9 +7,7 @@ import com.noticecatch.api.global.apiPayload.code.GeneralSuccessCode;
 import com.noticecatch.api.global.apiPayload.response.ListResponse;
 import com.noticecatch.api.global.resolver.CurrentUserId;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
