@@ -3,7 +3,6 @@ package com.noticecatch.api.domain.notice.service;
 import com.noticecatch.api.domain.notice.dto.response.NoticeDetailResponse.AiSummaryDto;
 import com.noticecatch.api.domain.notice.entity.Notice;
 import com.noticecatch.api.domain.notice.repository.NoticeRepository;
-import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,10 +12,12 @@ import org.springframework.data.domain.PageRequest;
 
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -27,13 +28,14 @@ class NoticeSummaryBatchServiceTest {
     @Mock
     private GeminiSummaryService geminiSummaryService;
     @Mock
-    private EntityManager entityManager;
+    private NoticeSummaryPersistenceService noticeSummaryPersistenceService;
 
     private NoticeSummaryBatchService noticeSummaryBatchService;
 
     @BeforeEach
     void setUp() {
-        noticeSummaryBatchService = new NoticeSummaryBatchService(noticeRepository, geminiSummaryService, entityManager);
+        noticeSummaryBatchService = new NoticeSummaryBatchService(
+                noticeRepository, geminiSummaryService, noticeSummaryPersistenceService);
     }
 
     private Notice notice(Long id, String title, String content) {
@@ -54,37 +56,53 @@ class NoticeSummaryBatchServiceTest {
 
         noticeSummaryBatchService.summarizePendingNotices();
 
-        verify(geminiSummaryService, org.mockito.Mockito.never()).generateSummary(any(), any());
+        verify(geminiSummaryService, never()).generateSummary(any(), any());
+        verify(noticeSummaryPersistenceService, never()).saveSummary(any(), any());
     }
 
     @Test
-    void 요약_생성에_성공하면_공지에_요약이_저장된다() {
+    void 요약_생성에_성공하면_건별_저장을_별도_트랜잭션에_위임한다() {
         Notice notice = notice(1L, "장학금 안내", "본문 내용");
+        AiSummaryDto summary = summary();
         given(noticeRepository.findByNoticeSummaryIsNull(any(PageRequest.class))).willReturn(List.of(notice));
-        given(geminiSummaryService.generateSummary("장학금 안내", "본문 내용")).willReturn(summary());
+        given(geminiSummaryService.generateSummary("장학금 안내", "본문 내용")).willReturn(summary);
 
         noticeSummaryBatchService.summarizePendingNotices();
 
-        assertThat(notice.getNoticeSummary()).isNotNull();
-        assertThat(notice.getNoticeSummary().getEligibility()).isEqualTo("직전 학기 12학점 이상 이수자");
-        assertThat(notice.getNoticeSummary().getBenefit()).isEqualTo("등록금 전액 면제");
-        assertThat(notice.getNoticeSummary().getDeadlineSummary()).isEqualTo("2026년 7월 9일까지");
-        assertThat(notice.getNoticeSummary().getNotice()).isSameAs(notice);
+        verify(noticeSummaryPersistenceService).saveSummary(1L, summary);
     }
 
     @Test
-    void 일부_공지의_요약_생성이_실패해도_나머지는_정상_처리되고_예외가_전파되지_않는다() {
+    void Gemini_호출이_실패한_공지는_저장을_시도하지_않고_나머지는_정상_처리된다() {
         Notice failing = notice(1L, "실패 공지", "본문1");
         Notice succeeding = notice(2L, "성공 공지", "본문2");
+        AiSummaryDto succeedingSummary = summary();
         given(noticeRepository.findByNoticeSummaryIsNull(any(PageRequest.class)))
                 .willReturn(List.of(failing, succeeding));
         given(geminiSummaryService.generateSummary("실패 공지", "본문1"))
                 .willThrow(new RuntimeException("Gemini 호출 실패", new RuntimeException("timeout")));
-        given(geminiSummaryService.generateSummary("성공 공지", "본문2")).willReturn(summary());
+        given(geminiSummaryService.generateSummary("성공 공지", "본문2")).willReturn(succeedingSummary);
 
         assertThatCode(() -> noticeSummaryBatchService.summarizePendingNotices()).doesNotThrowAnyException();
 
-        assertThat(failing.getNoticeSummary()).isNull();
-        assertThat(succeeding.getNoticeSummary()).isNotNull();
+        verify(noticeSummaryPersistenceService, never()).saveSummary(eq(1L), any());
+        verify(noticeSummaryPersistenceService).saveSummary(2L, succeedingSummary);
+    }
+
+    @Test
+    void 한_건의_저장_실패가_같은_배치의_다른_건_처리를_막지_않는다() {
+        Notice failing = notice(1L, "저장 실패 공지", "본문1");
+        Notice succeeding = notice(2L, "저장 성공 공지", "본문2");
+        AiSummaryDto failingSummary = summary();
+        AiSummaryDto succeedingSummary = summary();
+        given(noticeRepository.findByNoticeSummaryIsNull(any(PageRequest.class)))
+                .willReturn(List.of(failing, succeeding));
+        given(geminiSummaryService.generateSummary("저장 실패 공지", "본문1")).willReturn(failingSummary);
+        given(geminiSummaryService.generateSummary("저장 성공 공지", "본문2")).willReturn(succeedingSummary);
+        doThrow(new RuntimeException("DB 저장 실패")).when(noticeSummaryPersistenceService).saveSummary(1L, failingSummary);
+
+        assertThatCode(() -> noticeSummaryBatchService.summarizePendingNotices()).doesNotThrowAnyException();
+
+        verify(noticeSummaryPersistenceService).saveSummary(2L, succeedingSummary);
     }
 }
